@@ -1,0 +1,13 @@
+{
+    "name": "wenyan",
+    "version": "1.0.0",
+    "main": "index.js",
+    "license": "MIT",
+    "devDependencies": {
+        "typescript": "^5.9.3"
+    },
+    "scripts": {
+        "dev": "tsc --watch",
+        "build": "tsc"
+    }
+}
