@@ -1,4 +1,4 @@
-import { Token, TokenType, Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ParameterNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode } from './ast';
+import { Token, TokenType, Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ParameterNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode } from "./ast";
 
 export class Parser {
     private tokens: Token[];
@@ -48,8 +48,16 @@ export class Parser {
         }
 
         // 处理函数调用
-        if (token.type === TokenType.IDENTIFIER && this.lookAhead(1)?.type === TokenType.KNOWN) {
-            return this.parseFunctionCall();
+        if (token.type === TokenType.IDENTIFIER) {
+            // 检查是否有逗号在KNOWN前面
+            if (this.lookAhead(1)?.type === TokenType.COMMA && this.lookAhead(2)?.type === TokenType.KNOWN) {
+                // 不要在这里消耗逗号，让parseFunctionCall处理所有的消费
+                return this.parseFunctionCall();
+            }
+            // 处理没有逗号的情况
+            if (this.lookAhead(1)?.type === TokenType.KNOWN) {
+                return this.parseFunctionCall();
+            }
         }
 
         // 处理返回语句
@@ -68,10 +76,10 @@ export class Parser {
         const moduleName = importSymbol.value;
 
         // 期望下一个令牌是'曰'
-        this.expect(TokenType.IDENTIFIER, '曰');
+        this.expect(TokenType.IDENTIFIER, "曰");
 
         // 期望下一个令牌是':'
-        this.expect(TokenType.COLON, '：');
+        this.expect(TokenType.COLON, "：");
 
         const symbols: string[] = [];
 
@@ -89,7 +97,7 @@ export class Parser {
         }
 
         // 期望语句以句号结束
-        this.expect(TokenType.PERIOD, '。');
+        this.expect(TokenType.PERIOD, "。");
 
         return {
             type: NodeType.IMPORT_DECLARATION,
@@ -105,29 +113,29 @@ export class Parser {
         const functionToken = this.consume(); // 消耗'涵义'
 
         // 期望下一个令牌是'【'
-        this.expect(TokenType.LEFT_BRACKET, '【');
+        this.expect(TokenType.LEFT_BRACKET, "【");
 
         // 解析函数名
         const nameToken = this.expect(TokenType.IDENTIFIER);
         const functionName = nameToken.value;
 
         // 期望下一个令牌是'】'
-        this.expect(TokenType.RIGHT_BRACKET, '】');
+        this.expect(TokenType.RIGHT_BRACKET, "】");
 
         // 期望下一个令牌是'，'
-        this.expect(TokenType.COMMA, '，');
+        this.expect(TokenType.COMMA, "，");
 
         // 期望下一个令牌是'需知'
-        this.expect(TokenType.PARAM, '需知');
+        this.expect(TokenType.PARAM, "需知");
 
         const parameters: ParameterNode[] = [];
 
         // 解析参数列表
         while (this.peek()?.type === TokenType.IDENTIFIER) {
             const typeNameToken = this.consume();
-            this.expect(TokenType.LEFT_BRACKET, '【');
+            this.expect(TokenType.LEFT_BRACKET, "【");
             const paramNameToken = this.expect(TokenType.IDENTIFIER);
-            this.expect(TokenType.RIGHT_BRACKET, '】');
+            this.expect(TokenType.RIGHT_BRACKET, "】");
 
             parameters.push({
                 type: NodeType.PARAMETER,
@@ -146,7 +154,7 @@ export class Parser {
         }
 
         // 期望下一个令牌是'：'
-        this.expect(TokenType.COLON, '：');
+        this.expect(TokenType.COLON, "：");
 
         const body: Node[] = [];
 
@@ -176,11 +184,17 @@ export class Parser {
 
     // 解析函数调用
     private parseFunctionCall(): FunctionCallNode {
+        // 当前位置已经是函数名的标识符
         const functionNameToken = this.consume();
         const functionName = functionNameToken.value;
 
+        // 检查是否有逗号在KNOWN前面
+        if (this.peek()?.type === TokenType.COMMA) {
+            this.consume(); // 消耗逗号
+        }
+
         // 期望下一个令牌是'已知'
-        this.expect(TokenType.KNOWN, '已知');
+        this.expect(TokenType.KNOWN, "已知");
 
         const args: { [key: string]: Node } = {};
 
@@ -188,10 +202,10 @@ export class Parser {
         while (this.peek()?.type === TokenType.LEFT_BRACKET) {
             this.consume(); // 消耗'【'
             const paramNameToken = this.expect(TokenType.IDENTIFIER);
-            this.expect(TokenType.RIGHT_BRACKET, '】');
+            this.expect(TokenType.RIGHT_BRACKET, "】");
 
             // 期望下一个令牌是'为'
-            this.expect(TokenType.AS, '为');
+            this.expect(TokenType.AS, "为");
 
             // 解析参数值
             const value = this.parseExpression();
@@ -206,7 +220,7 @@ export class Parser {
         }
 
         // 期望语句以句号结束
-        this.expect(TokenType.PERIOD, '。');
+        this.expect(TokenType.PERIOD, "。");
 
         return {
             type: NodeType.FUNCTION_CALL,
@@ -224,7 +238,7 @@ export class Parser {
         const expression = this.parseExpression();
 
         // 期望语句以句号结束
-        this.expect(TokenType.PERIOD, '。');
+        this.expect(TokenType.PERIOD, "。");
 
         return {
             type: NodeType.RETURN_STATEMENT,
@@ -237,28 +251,28 @@ export class Parser {
     // 解析表达式
     private parseExpression(): Node {
         // 简单实现：支持标识符、数字、字符串和简单的二元表达式
-        let left = this.parsePrimary();
+        const left = this.parsePrimary();
 
         // 检查是否有操作符
         while (this.peek()?.type === TokenType.IDENTIFIER &&
-            ['加', '减', '乘', '除'].includes(this.peek()?.value || "")) {
+            ["加", "减", "乘", "除"].includes(this.peek()?.value || "")) {
             const operatorToken = this.consume();
             const right = this.parsePrimary();
-            left = {
+            return {
                 type: NodeType.EXPRESSION,
                 left,
                 operator: operatorToken.value,
                 right,
                 line: left.line,
                 column: left.column
-            };
+            } as ExpressionNode;
         }
 
         return left;
     }
 
     // 解析基本表达式
-    private parsePrimary(): Node {
+    private parsePrimary(): IdentifierNode | StringLiteralNode | NumberLiteralNode {
         const token = this.consume();
         switch (token.type) {
             case TokenType.IDENTIFIER:
@@ -269,14 +283,13 @@ export class Parser {
                     column: token.column
                 };
             case TokenType.NUMBER:
-                const numericValue = parseInt(token.value.replace(/[^0-9]/g, '')) || 0;
+                const numericValue = parseInt(token.value.replace(/[^0-9]/g, ""));
                 return {
                     type: NodeType.NUMBER_LITERAL,
                     value: numericValue,
                     line: token.line,
                     column: token.column
                 };
-
             case TokenType.STRING:
                 return {
                     type: NodeType.STRING_LITERAL,
@@ -309,7 +322,7 @@ export class Parser {
         const token = this.peek();
 
         if (!token || token.type !== type) {
-            throw new Error(`Expected token of type ${TokenType[type]}, but got ${token ? TokenType[token.type] : 'end of input'}`);
+            throw new Error(`Expected token of type ${TokenType[type]}, but got ${token ? TokenType[token.type] : "end of input"}`);
         }
 
         if (expectedValue && token.value !== expectedValue) {

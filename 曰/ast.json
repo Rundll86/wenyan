@@ -1,0 +1,31 @@
+{
+    "type": "PROGRAM",
+    "body": [
+        {
+            "type": "IMPORT_DECLARATION",
+            "moduleName": "志者.文言",
+            "symbols": [
+                "曰",
+                "倾"
+            ],
+            "line": 1,
+            "column": 2
+        },
+        {
+            "type": "FUNCTION_CALL",
+            "name": "曰",
+            "arguments": {
+                "文": {
+                    "type": "STRING_LITERAL",
+                    "value": "你好，世界！",
+                    "line": 3,
+                    "column": 11
+                }
+            },
+            "line": 3,
+            "column": 1
+        }
+    ],
+    "line": 1,
+    "column": 1
+}
