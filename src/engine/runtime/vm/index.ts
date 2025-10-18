@@ -69,34 +69,55 @@ export class VM {
     }
     private executeFunctionCall(node: FunctionCallNode): unknown {
         const { name, arguments: args } = node;
+        
+        // 获取函数
         const func = this.environment.functions[name];
         if (!func) {
             throw new WenyanError(`尚未建「${name}」之涵义`);
         }
+        
+        // 准备参数，确保正确处理嵌套的函数调用
         const preparedArgs: Record<string, unknown> = {};
+        
+        // 遍历所有参数，为每个参数执行对应的节点
         for (const [key, valueNode] of Object.entries(args)) {
             preparedArgs[key] = this.executeNode(valueNode);
         }
+        
+        // 执行函数并返回结果
         return func(preparedArgs, this);
     }
-    private executeExpression(node: ExpressionNode): number {
+    private executeExpression(node: ExpressionNode): unknown {
         const { left, operator, right } = node;
+        
+        // 执行左右操作数
         const leftValue = this.executeNode(left);
         const rightValue = this.executeNode(right);
-        const leftNum = Number(leftValue);
-        const rightNum = Number(rightValue);
-        switch (operator) {
-            case "加":
-                return leftNum + rightNum;
-            case "减":
-                return leftNum - rightNum;
-            case "乘":
-                return leftNum * rightNum;
-            case "除":
-                return leftNum / rightNum;
-            default:
-                throw new WenyanError(`未知算符「${operator}」`);
+        
+        // 优先处理基本运算符
+        const operatorMap: Record<string, (a: number, b: number) => number> = {
+            "加": (a, b) => a + b,
+            "减": (a, b) => a - b,
+            "乘": (a, b) => a * b,
+            "除": (a, b) => a / b,
+            "幂": Math.pow,
+            "模": (a, b) => a % b
+        };
+        
+        if (operator in operatorMap) {
+            // 确保操作数是数字类型
+            const leftNum = Number(leftValue);
+            const rightNum = Number(rightValue);
+            return operatorMap[operator](leftNum, rightNum);
         }
+        
+        // 然后再检查运算符是否是函数
+        const operatorFunction = this.environment.functions[operator];
+        if (operatorFunction) {
+            return operatorFunction({ "左": leftValue, "右": rightValue }, this);
+        }
+        
+        throw new WenyanError(`未知算符「${operator}」或无对应的操作函数`);
     }
     private resolveIdentifier(node: IdentifierNode): unknown {
         const { name } = node;
@@ -129,10 +150,17 @@ export class VM {
                 modules: { ...vm.environment.modules }
             };
             const functionVM = new VM(this.runtime, newEnv);
+            
             for (const param of parameters) {
                 const paramName = param.name;
                 if (paramName in args) {
-                    functionVM.setVariable(paramName, args[paramName]);
+                    const argValue = args[paramName];
+                    // 如果参数值是字符串且是函数名，则直接保存函数引用
+                    if (typeof argValue === "string" && vm.environment.functions[argValue]) {
+                        functionVM.setVariable(paramName, vm.environment.functions[argValue]);
+                    } else {
+                        functionVM.setVariable(paramName, argValue);
+                    }
                 } else {
                     throw new WenyanError(`用以「${name}」而缺「${paramName}」之值`);
                 }
@@ -148,7 +176,6 @@ export class VM {
         };
         this.registerFunction(name, func);
     }
-
     private executeReturnStatement(node: ReturnStatementNode): unknown {
         return this.executeNode(node.expression);
     }
