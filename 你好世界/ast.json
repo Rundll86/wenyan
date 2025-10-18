@@ -39,8 +39,20 @@
                     },
                     "operator": "加",
                     "right": {
-                        "type": "NUMBER_LITERAL",
-                        "value": 3,
+                        "type": "EXPRESSION",
+                        "left": {
+                            "type": "NUMBER_LITERAL",
+                            "value": 3,
+                            "line": 4,
+                            "column": 14
+                        },
+                        "operator": "幂",
+                        "right": {
+                            "type": "NUMBER_LITERAL",
+                            "value": 2,
+                            "line": 4,
+                            "column": 18
+                        },
                         "line": 4,
                         "column": 14
                     },
@@ -50,18 +62,6 @@
             },
             "line": 4,
             "column": 1
-        },
-        {
-            "type": "IDENTIFIER",
-            "name": "幂",
-            "line": 4,
-            "column": 16
-        },
-        {
-            "type": "NUMBER_LITERAL",
-            "value": 2,
-            "line": 4,
-            "column": 18
         }
     ],
     "line": 1,
