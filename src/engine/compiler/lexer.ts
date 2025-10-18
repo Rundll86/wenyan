@@ -188,6 +188,14 @@ export class Lexer {
                     column: this.column - value.length
                 });
                 break;
+            case "设":
+                this.tokens.push({
+                    type: TokenType.LET,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
             case "曰":
                 this.tokens.push({
                     type: TokenType.IDENTIFIER,

@@ -17,6 +17,7 @@ export enum TokenType {
     COMMA = "COMMA",
     DOUBLE_QUOTE = "DOUBLE_QUOTE",
     IMPORT_SYMBOL = "IMPORT_SYMBOL",
+    LET = "LET", // 设关键字
 }
 export interface Token {
     type: TokenType;
@@ -35,6 +36,8 @@ export enum NodeType {
     IDENTIFIER = "IDENTIFIER",
     STRING_LITERAL = "STRING_LITERAL",
     NUMBER_LITERAL = "NUMBER_LITERAL",
+    VARIABLE_DECLARATION = "VARIABLE_DECLARATION", // 变量声明
+    VARIABLE_ASSIGNMENT = "VARIABLE_ASSIGNMENT",   // 变量赋值
 }
 export interface Node {
     type: NodeType;
@@ -87,4 +90,17 @@ export interface StringLiteralNode extends Node {
 export interface NumberLiteralNode extends Node {
     type: NodeType.NUMBER_LITERAL;
     value: number;
+}
+
+export interface VariableDeclarationNode extends Node {
+    type: NodeType.VARIABLE_DECLARATION;
+    typeName: string;
+    name: string;
+    value: Node;
+}
+
+export interface VariableAssignmentNode extends Node {
+    type: NodeType.VARIABLE_ASSIGNMENT;
+    name: string;
+    value: Node;
 }
