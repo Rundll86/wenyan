@@ -9,7 +9,6 @@ export class Runtime {
     private vm: VM;
     private moduleRegistry: ModuleRegistry;
     private defaultEnvironment: Partial<Environment>;
-
     constructor() {
         this.moduleRegistry = {};
         this.defaultEnvironment = {};

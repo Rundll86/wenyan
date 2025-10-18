@@ -1,30 +1,22 @@
-// 抽象语法树定义
-
-// 令牌类型
 export enum TokenType {
-    // 关键字
-    IMPORT = "IMPORT",        // 导入
-    FUNCTION = "FUNCTION",    // 函数定义（涵义）
-    PARAM = "PARAM",          // 参数（需知）
-    RETURN = "RETURN",        // 返回（求）
-    CALL = "CALL",            // 函数调用
-    KNOWN = "KNOWN",          // 已知
-    AS = "AS",                // 为
-    FROM = "FROM",            // 从
-
-    // 标识符和字面量
-    IDENTIFIER = "IDENTIFIER",  // 标识符
-    STRING = "STRING",          // 字符串字面量
-    NUMBER = "NUMBER",          // 数字字面量
-
-    // 符号
-    LEFT_BRACKET = "LEFT_BRACKET",    // 【
-    RIGHT_BRACKET = "RIGHT_BRACKET",  // 】
-    COLON = "COLON",                  // ：
-    PERIOD = "PERIOD",                // 。
-    COMMA = "COMMA",                  // ，
-    DOUBLE_QUOTE = "DOUBLE_QUOTE",    // "
-    IMPORT_SYMBOL = "IMPORT_SYMBOL",  // 《》
+    IMPORT = "IMPORT",
+    FUNCTION = "FUNCTION",
+    PARAM = "PARAM",
+    RETURN = "RETURN",
+    CALL = "CALL",
+    KNOWN = "KNOWN",
+    AS = "AS",
+    FROM = "FROM",
+    IDENTIFIER = "IDENTIFIER",
+    STRING = "STRING",
+    NUMBER = "NUMBER",
+    LEFT_BRACKET = "LEFT_BRACKET",
+    RIGHT_BRACKET = "RIGHT_BRACKET",
+    COLON = "COLON",
+    PERIOD = "PERIOD",
+    COMMA = "COMMA",
+    DOUBLE_QUOTE = "DOUBLE_QUOTE",
+    IMPORT_SYMBOL = "IMPORT_SYMBOL",
 }
 export interface Token {
     type: TokenType;
