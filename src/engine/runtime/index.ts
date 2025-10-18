@@ -19,7 +19,7 @@ export class Runtime {
     private initDefaultEnvironment(): Partial<Environment> {
         return {
             classes: {
-                '文言': {
+                "文言": {
                     asRawValue: {
                         validate: () => true,
                         cast: (value: ValueDescriptor) => String(value.value)
@@ -27,7 +27,7 @@ export class Runtime {
                     attributes: {},
                     methods: {}
                 },
-                '数': {
+                "数": {
                     asRawValue: {
                         validate: (value: ValueDescriptor) => {
                             const num = Number(value.value);
@@ -38,7 +38,7 @@ export class Runtime {
                     attributes: {},
                     methods: {}
                 },
-                '阴阳': {
+                "阴阳": {
                     asRawValue: {
                         validate: () => true,
                         cast: (value: ValueDescriptor) => Boolean(value.value)
@@ -73,7 +73,7 @@ export class Runtime {
     public loadModule(moduleName: string): ModuleLibrary | null {
         return this.moduleRegistry[moduleName] || null;
     }
-    public registerModule(name: string, module: any): void {
+    public registerModule(name: string, module: ModuleLibrary): void {
         this.moduleRegistry[name] = module;
     }
     private registerBuiltinModules(): void {

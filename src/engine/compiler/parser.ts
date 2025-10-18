@@ -58,7 +58,7 @@ export class Parser {
                     }
                     return expr;
                 }
-            } catch (e) {
+            } catch {
                 this.position = savedPosition;
                 try {
                     if (isFunctionCallPattern) {
@@ -275,7 +275,7 @@ export class Parser {
 
     private parseAdditive(): Node {
         let left = this.parseMultiplicative();
-        while (this.peek()?.type === TokenType.IDENTIFIER && ['加', '减'].includes(this.peek()!.value)) {
+        while (this.peek()?.type === TokenType.IDENTIFIER && ["加", "减"].includes(this.peek()!.value)) {
             const operatorToken = this.consume();
             const right = this.parseMultiplicative();
             left = {
@@ -292,7 +292,7 @@ export class Parser {
 
     private parseMultiplicative(): Node {
         let left = this.parseExponentiation();
-        while (this.peek()?.type === TokenType.IDENTIFIER && ['乘', '除', '模'].includes(this.peek()!.value)) {
+        while (this.peek()?.type === TokenType.IDENTIFIER && ["乘", "除", "模"].includes(this.peek()!.value)) {
             const operatorToken = this.consume();
             const right = this.parseExponentiation();
             left = {
@@ -309,7 +309,7 @@ export class Parser {
 
     private parseExponentiation(): Node {
         let left = this.parsePrimary();
-        while (this.peek()?.type === TokenType.IDENTIFIER && ['幂'].includes(this.peek()!.value)) {
+        while (this.peek()?.type === TokenType.IDENTIFIER && ["幂"].includes(this.peek()!.value)) {
             const operatorToken = this.consume();
             const right = this.parseExponentiation();
             left = {

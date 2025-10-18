@@ -1,18 +1,18 @@
 import { WenyanError } from "../../common/exceptions";
-import { Environment, ClassType, ValueDescriptor, FunctionDescriptor, FunctionExecutor, ModuleLibrary } from "../../common/structs";
+import { Environment, ValueDescriptor, FunctionDescriptor, FunctionExecutor, ModuleLibrary } from "../../common/structs";
 import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, ReturnStatementNode, FunctionCallNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode } from "../../compiler/ast";
 import { Runtime } from "../index";
 
 export class VM {
     runtime: Runtime;
     environment: Environment;
-    constructor(runtime: Runtime, env?: Partial<Environment>) {
+    constructor(runtime: Runtime, env: Partial<Environment> = {}) {
         this.runtime = runtime;
         this.environment = {
-            variables: env?.variables || {},
-            functions: env?.functions || {},
-            classes: env?.classes || {},
-            modules: env?.modules || {},
+            variables: env.variables || {},
+            functions: env.functions || {},
+            classes: env.classes || {},
+            modules: env.modules || {},
         };
     }
     public execute(program: ProgramNode): unknown {
@@ -56,7 +56,7 @@ export class VM {
         }
         let processedValue = rawValue;
         const tempValueDescriptor: ValueDescriptor = {
-            type: '未知',
+            type: "未知",
             value: rawValue
         };
         if (typeClass.asRawValue) {
@@ -89,7 +89,7 @@ export class VM {
             let processedValue = rawValue;
             const targetTypeClass = this.environment.classes[existingVar.type];
             const tempValueDescriptor: ValueDescriptor = {
-                type: '未知',
+                type: "未知",
                 value: rawValue
             };
             if (targetTypeClass?.asRawValue) {
@@ -103,11 +103,11 @@ export class VM {
                 value: processedValue
             };
         } else {
-            let type = '数';
-            if (typeof rawValue === 'string') type = '文言';
-            else if (typeof rawValue === 'boolean' || rawValue === 1 || rawValue === 0) type = '阴阳';
+            let type = "数";
+            if (typeof rawValue === "string") type = "文言";
+            else if (typeof rawValue === "boolean" || rawValue === 1 || rawValue === 0) type = "阴阳";
             let value = rawValue;
-            if (type === '阴阳' && typeof rawValue === 'number') {
+            if (type === "阴阳" && typeof rawValue === "number") {
                 value = Boolean(rawValue);
             }
             valueDescriptor = {
@@ -135,7 +135,7 @@ export class VM {
             if (!allSymbols.includes(symbol)) {
                 throw new WenyanError(`「${symbol}」未建于构件「${moduleName}」之内`);
             }
-        })
+        });
         const importedSymbols: Record<string, unknown> = {};
         if (currentModule.functions) {
             for (const symbol of symbols) {
@@ -165,7 +165,7 @@ export class VM {
         const preparedArgs: Record<string, unknown> = {};
         for (const [key, valueNode] of Object.entries(args)) {
             const value = this.executeNode(valueNode);
-            preparedArgs[key] = value && typeof value === 'object' && 'value' in value ?
+            preparedArgs[key] = value && typeof value === "object" && "value" in value ?
                 (value as ValueDescriptor).value : value;
         }
         if (funcDescriptor.builtin) {
@@ -178,15 +178,15 @@ export class VM {
                         throw new WenyanError(`未明其类「${param.type}」`);
                     }
                     let processedValue = argValue;
-                    if (param.type === '文言' && typeof argValue !== 'string') {
+                    if (param.type === "文言" && typeof argValue !== "string") {
                         processedValue = String(argValue);
-                    } else if (param.type === '数' && typeof argValue !== 'number') {
+                    } else if (param.type === "数" && typeof argValue !== "number") {
                         const num = Number(argValue);
                         if (isNaN(num)) {
                             throw new WenyanError(`参属「${argValue}」，难化为「${param.type}」`);
                         }
                         processedValue = num;
-                    } else if (param.type === '阴阳' && typeof argValue !== 'boolean') {
+                    } else if (param.type === "阴阳" && typeof argValue !== "boolean") {
                         processedValue = Boolean(argValue);
                     }
                     preparedArgs[param.name] = processedValue;
@@ -218,19 +218,19 @@ export class VM {
                             if (typeof argValue === "string" && vm.environment.functions[argValue]) {
                                 processedValue = vm.environment.functions[argValue];
                                 functionVM.environment.variables[paramName] = {
-                                    type: '函数',
+                                    type: "函数",
                                     value: processedValue
                                 };
                             } else {
-                                if (paramTypeName === '文言' && typeof argValue !== 'string') {
+                                if (paramTypeName === "文言" && typeof argValue !== "string") {
                                     processedValue = String(argValue);
-                                } else if (paramTypeName === '数' && typeof argValue !== 'number') {
+                                } else if (paramTypeName === "数" && typeof argValue !== "number") {
                                     const num = Number(argValue);
                                     if (isNaN(num)) {
                                         throw new WenyanError(`参属「${argValue}」，难化为「${paramTypeName}」`);
                                     }
                                     processedValue = num;
-                                } else if (paramTypeName === '阴阳' && typeof argValue !== 'boolean') {
+                                } else if (paramTypeName === "阴阳" && typeof argValue !== "boolean") {
                                     processedValue = Boolean(argValue);
                                 }
                                 functionVM.environment.variables[paramName] = {
@@ -248,14 +248,14 @@ export class VM {
                     for (const statement of funcDescriptor.ast.body) {
                         result = functionVM.executeNode(statement);
                         if (statement.type === NodeType.RETURN_STATEMENT) {
-                            if (result && typeof result === 'object' && 'value' in result) {
+                            if (result && typeof result === "object" && "value" in result) {
                                 return (result as ValueDescriptor).value;
                             }
                             return result;
                         }
                     }
                 }
-                if (result && typeof result === 'object' && 'value' in result) {
+                if (result && typeof result === "object" && "value" in result) {
                     return (result as ValueDescriptor).value;
                 }
                 return result;
@@ -313,10 +313,10 @@ export class VM {
         }
         throw new WenyanError(`尚未建量「${name}」`);
     }
-    public setVariable(name: string, value: unknown, type: string = '数'): void {
+    public setVariable(name: string, value: unknown, type: string = "数"): void {
         if (!type) {
-            if (typeof value === 'string') type = '文言';
-            else if (typeof value === 'boolean') type = '阴阳';
+            if (typeof value === "string") type = "文言";
+            else if (typeof value === "boolean") type = "阴阳";
         }
         this.environment.variables[name] = {
             type,
@@ -328,7 +328,7 @@ export class VM {
         return descriptor ? (descriptor as ValueDescriptor).value : undefined;
     }
     public registerFunction(name: string, func: FunctionExecutor | FunctionDescriptor): void {
-        if (typeof func === 'function') {
+        if (typeof func === "function") {
             this.environment.functions[name] = {
                 builtin: {
                     executor: func,
