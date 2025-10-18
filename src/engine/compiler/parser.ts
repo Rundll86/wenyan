@@ -108,20 +108,32 @@ export class Parser {
             }
         }
         this.expect(TokenType.COLON, "：");
+        
+        // 记录当前函数声明的缩进级别（列号）
         const functionIndentation = functionToken.column;
+        
         const body: Node[] = [];
-        while (this.peek()) {
+        
+        // 使用基于缩进的方法解析函数体，直到遇到缩进级别小于等于函数声明缩进级别的非空行
+        while (this.position < this.length) {
             const nextToken = this.peek();
-            if (nextToken && (nextToken.type === TokenType.FUNCTION ||
-                nextToken.type === TokenType.KNOWN ||
-                nextToken.column <= functionIndentation)) {
+            if (!nextToken) break;
+            
+            // 直接使用下一个token的缩进级别
+            const nextTokenIndent = nextToken.column;
+            
+            // 如果缩进级别小于等于函数声明的缩进级别，说明函数体结束
+            if (nextTokenIndent <= functionIndentation) {
                 break;
             }
+            
+            // 解析当前语句（可能是嵌套函数、函数调用等）
             const node = this.parseStatement();
             if (node) {
                 body.push(node);
             }
         }
+        
         return {
             type: NodeType.FUNCTION_DECLARATION,
             name: functionName,
