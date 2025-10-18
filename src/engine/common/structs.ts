@@ -1,8 +1,11 @@
 import { FunctionDeclarationNode } from "../compiler/ast";
 import { type VM } from "../runtime/vm";
-export type ModuleLibrary = Record<string, unknown> | { default: Record<string, unknown> };
+export type ModuleLibrary = Partial<Environment>;
 export interface ClassType {
-    rawValue: boolean;
+    asRawValue?: {
+        validate: (value: ValueDescriptor) => boolean;
+        cast: (value: ValueDescriptor) => unknown;
+    };
     attributes: Record<string, unknown>;
     methods: Record<string, FunctionDescriptor>;
 }
@@ -21,7 +24,7 @@ export interface Environment {
     modules: Record<string, Record<string, unknown>>;
     parent?: Environment;
 }
-export type FunctionExecutor = (args: Record<string, unknown>, vm?: VM) => unknown
+export type FunctionExecutor = (args: Record<string, unknown>, vm: VM) => unknown
 export interface FunctionDescriptor {
     builtin?: {
         executor: FunctionExecutor;

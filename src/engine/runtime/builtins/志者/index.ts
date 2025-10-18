@@ -8,8 +8,9 @@ export default {
                     type: "文言",
                     name: "文",
                 }],
-                executor(args) {
+                executor(args, vm) {
                     console.log(args.文);
+                    console.log(vm.getEnvironment());
                 }
             }
         }

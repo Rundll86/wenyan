@@ -1,6 +1,6 @@
-import { ModuleLibrary } from "../common/structs";
+import { Environment, ModuleLibrary, ValueDescriptor } from "../common/structs";
 import { Node, NodeType, ProgramNode } from "../compiler/ast";
-import { VM, Environment } from "./vm";
+import { VM } from "./vm";
 import * as builtinRaws from "./builtins/lib";
 
 export const builtins = builtinRaws as Record<string, ModuleLibrary>;
@@ -11,9 +11,43 @@ export class Runtime {
     private defaultEnvironment: Partial<Environment>;
     constructor() {
         this.moduleRegistry = {};
-        this.defaultEnvironment = {};
+        this.defaultEnvironment = this.initDefaultEnvironment();
         this.vm = new VM(this, this.defaultEnvironment);
         this.registerBuiltinModules();
+    }
+
+    private initDefaultEnvironment(): Partial<Environment> {
+        return {
+            classes: {
+                '文言': {
+                    asRawValue: {
+                        validate: () => true,
+                        cast: (value: ValueDescriptor) => String(value.value)
+                    },
+                    attributes: {},
+                    methods: {}
+                },
+                '数': {
+                    asRawValue: {
+                        validate: (value: ValueDescriptor) => {
+                            const num = Number(value.value);
+                            return !isNaN(num) && isFinite(num);
+                        },
+                        cast: (value: ValueDescriptor) => Number(value.value)
+                    },
+                    attributes: {},
+                    methods: {}
+                },
+                '阴阳': {
+                    asRawValue: {
+                        validate: () => true,
+                        cast: (value: ValueDescriptor) => Boolean(value.value)
+                    },
+                    attributes: {},
+                    methods: {}
+                }
+            }
+        };
     }
     public execute(ast: Node | Node[]): unknown {
         if (Array.isArray(ast)) {
@@ -48,7 +82,7 @@ export class Runtime {
     private loadBuiltinModule(moduleName: string): void {
         const module = builtins[moduleName];
         if (module) {
-            const actualModule = module.default || module;
+            const actualModule = module;
             this.registerModule(moduleName, actualModule);
         }
     }

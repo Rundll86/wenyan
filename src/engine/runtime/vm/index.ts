@@ -1,65 +1,18 @@
 import { WenyanError } from "../../common/exceptions";
-import { Environment, ClassType, ValueDescriptor, FunctionDescriptor, FunctionExecutor } from "../../common/structs";
+import { Environment, ClassType, ValueDescriptor, FunctionDescriptor, FunctionExecutor, ModuleLibrary } from "../../common/structs";
 import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, ReturnStatementNode, FunctionCallNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode } from "../../compiler/ast";
 import { Runtime } from "../index";
 
-// 导出 Environment 以便其他模块使用
-export { Environment };
-
 export class VM {
-    private runtime: Runtime;
-    private environment: Environment;
+    runtime: Runtime;
+    environment: Environment;
     constructor(runtime: Runtime, env?: Partial<Environment>) {
         this.runtime = runtime;
         this.environment = {
             variables: env?.variables || {},
             functions: env?.functions || {},
-            classes: env?.classes || this.createBuiltinClasses(),
+            classes: env?.classes || {},
             modules: env?.modules || {},
-        };
-    }
-
-    private createBuiltinClasses(): Record<string, ClassType> {
-        return {
-            '文言': {
-                rawValue: true,
-                attributes: {},
-                methods: {
-                    '转为数': {
-                        builtin: {
-                            executor: (args: Record<string, unknown>, vm?: VM) => {
-                                const value = args['值'] as string;
-                                const num = Number(value);
-                                if (isNaN(num)) {
-                                    throw new WenyanError('不能转换为数字');
-                                }
-                                return num;
-                            },
-                            parameters: []
-                        }
-                    }
-                }
-            },
-            '数': {
-                rawValue: true,
-                attributes: {},
-                methods: {
-                    '转为文言': {
-                        builtin: {
-                            executor: (args: Record<string, unknown>, vm?: VM) => {
-                                const value = args['值'] as number;
-                                return String(value);
-                            },
-                            parameters: []
-                        }
-                    }
-                }
-            },
-            '阴阳': {
-                rawValue: true,
-                attributes: {},
-                methods: {}
-            }
         };
     }
     public execute(program: ProgramNode): unknown {
@@ -101,37 +54,28 @@ export class VM {
         if (!typeClass) {
             throw new WenyanError(`未明其类「${node.typeName}」`);
         }
-        
-        // 处理值，根据类型系统转换
         let processedValue = rawValue;
-        if (node.typeName === '文言' && typeof rawValue !== 'string') {
-            processedValue = String(rawValue);
-        } else if (node.typeName === '数' && typeof rawValue !== 'number') {
-            const num = Number(rawValue);
-            if (isNaN(num)) {
+        const tempValueDescriptor: ValueDescriptor = {
+            type: '未知',
+            value: rawValue
+        };
+        if (typeClass.asRawValue) {
+            if (!typeClass.asRawValue.validate(tempValueDescriptor)) {
                 throw new WenyanError(`值属「${rawValue}」，难化为「${node.typeName}」`);
             }
-            processedValue = num;
-        } else if (node.typeName === '阴阳') {
-            // 对于阴阳类型，确保转换为布尔值
-            processedValue = Boolean(rawValue);
+            processedValue = typeClass.asRawValue.cast(tempValueDescriptor);
         }
-        
         const valueDescriptor: ValueDescriptor = {
             type: node.typeName,
             value: processedValue
         };
-        
         this.environment.variables[node.name] = valueDescriptor;
         return valueDescriptor;
     }
     private executeVariableAssignment(node: VariableAssignmentNode): ValueDescriptor {
         const rawValue = this.executeNode(node.value);
-        
-        // 查找变量并获取其类型
         let targetEnv = this.environment;
         let existingVar: ValueDescriptor | undefined = targetEnv.variables[node.name];
-        
         if (!existingVar && targetEnv.parent) {
             while (targetEnv.parent && !(node.name in targetEnv.parent.variables)) {
                 targetEnv = targetEnv.parent;
@@ -140,47 +84,37 @@ export class VM {
                 existingVar = targetEnv.parent.variables[node.name];
             }
         }
-        
-        // 创建新的ValueDescriptor
         let valueDescriptor: ValueDescriptor;
         if (existingVar) {
-            // 保持原类型，转换值
             let processedValue = rawValue;
-            if (existingVar.type === '文言' && typeof rawValue !== 'string') {
-                processedValue = String(rawValue);
-            } else if (existingVar.type === '数' && typeof rawValue !== 'number') {
-                const num = Number(rawValue);
-                if (isNaN(num)) {
+            const targetTypeClass = this.environment.classes[existingVar.type];
+            const tempValueDescriptor: ValueDescriptor = {
+                type: '未知',
+                value: rawValue
+            };
+            if (targetTypeClass?.asRawValue) {
+                if (!targetTypeClass.asRawValue.validate(tempValueDescriptor)) {
                     throw new WenyanError(`值属「${rawValue}」，难化为「${existingVar.type}」`);
                 }
-                processedValue = num;
-            } else if (existingVar.type === '阴阳') {
-                // 对于阴阳类型，确保转换为布尔值
-                processedValue = Boolean(rawValue);
+                processedValue = targetTypeClass.asRawValue.cast(tempValueDescriptor);
             }
-            
             valueDescriptor = {
                 type: existingVar.type,
                 value: processedValue
             };
         } else {
-            // 推断类型
             let type = '数';
             if (typeof rawValue === 'string') type = '文言';
             else if (typeof rawValue === 'boolean' || rawValue === 1 || rawValue === 0) type = '阴阳';
-            
             let value = rawValue;
             if (type === '阴阳' && typeof rawValue === 'number') {
                 value = Boolean(rawValue);
             }
-            
             valueDescriptor = {
                 type,
                 value
             };
         }
-        
-        // 赋值
         if (node.name in this.environment.variables) {
             this.environment.variables[node.name] = valueDescriptor;
         } else if (targetEnv.parent && node.name in targetEnv.parent.variables) {
@@ -188,61 +122,38 @@ export class VM {
         } else {
             this.environment.variables[node.name] = valueDescriptor;
         }
-        
         return valueDescriptor;
     }
     private executeImportDeclaration(node: ImportDeclarationNode): Record<string, unknown> {
         const { moduleName, symbols } = node;
-        const module = this.runtime.loadModule(moduleName);
-        if (!module) {
+        const currentModule = this.runtime.loadModule(moduleName);
+        if (!currentModule) {
             throw new WenyanError(`构件「${moduleName}」加载无果`);
         }
-        
+        const allSymbols = this.getModuleAllSymbols(currentModule);
+        symbols.forEach(symbol => {
+            if (!allSymbols.includes(symbol)) {
+                throw new WenyanError(`「${symbol}」未建于构件「${moduleName}」之内`);
+            }
+        })
         const importedSymbols: Record<string, unknown> = {};
-        
-        // 处理整个模块导入
-        if (typeof module === 'object' && module !== null) {
-            const typedModule = module as Partial<Environment>;
-            // 导入模块中的函数
-            if (typedModule.functions && typeof typedModule.functions === 'object' && typedModule.functions !== null) {
-                for (const symbol of symbols) {
-                    if (symbol in typedModule.functions) {
-                        const funcDescriptor = typedModule.functions[symbol];
-                        this.environment.functions[symbol] = funcDescriptor;
-                        importedSymbols[symbol] = funcDescriptor;
-                    } else {
-                        throw new WenyanError(`「${symbol}」未建于构件「${moduleName}」之内`);
-                    }
-                }
-            }
-            // 导入模块中的变量
-            if (typedModule.variables && typeof typedModule.variables === 'object' && typedModule.variables !== null && symbols.length > 0) {
-                for (const symbol of symbols) {
-                    const isInFunctions = typedModule.functions && symbol in typedModule.functions;
-                    if (symbol in typedModule.variables && !isInFunctions) {
-                        this.environment.variables[symbol] = typedModule.variables[symbol];
-                        importedSymbols[symbol] = typedModule.variables[symbol];
-                    }
-                }
-            }
-        } else {
-            // 向后兼容旧模块格式
+        if (currentModule.functions) {
             for (const symbol of symbols) {
-                if (symbol in module) {
-                    const moduleItem = module[symbol];
-                    if (typeof moduleItem === "function") {
-                        this.environment.functions[symbol] = {
-                            builtin: {
-                                executor: moduleItem as FunctionExecutor,
-                                parameters: []
-                            }
-                        };
-                    }
-                    importedSymbols[symbol] = moduleItem;
+                if (symbol in currentModule.functions) {
+                    const funcDescriptor = currentModule.functions[symbol];
+                    this.environment.functions[symbol] = funcDescriptor;
+                    importedSymbols[symbol] = funcDescriptor;
                 }
             }
         }
-        
+        if (currentModule.variables) {
+            for (const symbol of symbols) {
+                if (symbol in currentModule.variables) {
+                    this.environment.variables[symbol] = currentModule.variables[symbol];
+                    importedSymbols[symbol] = currentModule.variables[symbol];
+                }
+            }
+        }
         return importedSymbols;
     }
     private executeFunctionCall(node: FunctionCallNode): unknown {
@@ -251,32 +162,21 @@ export class VM {
         if (!funcDescriptor) {
             throw new WenyanError(`尚未建「${name}」之涵义`);
         }
-        
         const preparedArgs: Record<string, unknown> = {};
-        
-        // 准备参数
         for (const [key, valueNode] of Object.entries(args)) {
             const value = this.executeNode(valueNode);
-            // 如果是ValueDescriptor，使用其实际值
-            preparedArgs[key] = value && typeof value === 'object' && 'value' in value ? 
-                              (value as ValueDescriptor).value : value;
+            preparedArgs[key] = value && typeof value === 'object' && 'value' in value ?
+                (value as ValueDescriptor).value : value;
         }
-        
-        // 处理内置函数
         if (funcDescriptor.builtin) {
             const { executor, parameters } = funcDescriptor.builtin;
-            
-            // 参数类型检查
             for (const param of parameters) {
                 if (param.name in preparedArgs) {
                     const argValue = preparedArgs[param.name];
                     const typeClass = this.environment.classes[param.type];
-                    
                     if (!typeClass) {
                         throw new WenyanError(`未明其类「${param.type}」`);
                     }
-                    
-                    // 进行类型转换和验证
                     let processedValue = argValue;
                     if (param.type === '文言' && typeof argValue !== 'string') {
                         processedValue = String(argValue);
@@ -289,29 +189,21 @@ export class VM {
                     } else if (param.type === '阴阳' && typeof argValue !== 'boolean') {
                         processedValue = Boolean(argValue);
                     }
-                    
                     preparedArgs[param.name] = processedValue;
                 }
             }
-            
             return executor(preparedArgs, this);
         }
-        // 处理用户定义函数
         else if (funcDescriptor.ast) {
-            // 复用executeFunctionDeclaration中的逻辑
-            // 创建函数执行器并调用
             const funcExecutor = (args: Record<string, unknown>, vm: VM = this) => {
-                // 创建新环境，继承父环境的变量、函数和类
                 const newEnv: Partial<Environment> = {
-                    variables: {}, // 函数内的变量应该是空的，在执行过程中定义
+                    variables: {},
                     functions: { ...vm.environment.functions },
                     classes: { ...vm.environment.classes },
                     modules: { ...vm.environment.modules },
-                    parent: vm.environment // 设置父环境引用，实现作用域链
+                    parent: vm.environment
                 };
                 const functionVM = new VM(this.runtime, newEnv);
-
-                // 处理参数
                 if (funcDescriptor.ast) {
                     for (const param of funcDescriptor.ast.parameters) {
                         const paramName = param.name;
@@ -322,18 +214,14 @@ export class VM {
                             if (!typeClass) {
                                 throw new WenyanError(`未明其类「${paramTypeName}」`);
                             }
-                            
-                            // 处理参数值
                             let processedValue = argValue;
                             if (typeof argValue === "string" && vm.environment.functions[argValue]) {
-                                // 函数引用
                                 processedValue = vm.environment.functions[argValue];
                                 functionVM.environment.variables[paramName] = {
                                     type: '函数',
                                     value: processedValue
                                 };
                             } else {
-                                // 根据类型转换值
                                 if (paramTypeName === '文言' && typeof argValue !== 'string') {
                                     processedValue = String(argValue);
                                 } else if (paramTypeName === '数' && typeof argValue !== 'number') {
@@ -345,7 +233,6 @@ export class VM {
                                 } else if (paramTypeName === '阴阳' && typeof argValue !== 'boolean') {
                                     processedValue = Boolean(argValue);
                                 }
-                                
                                 functionVM.environment.variables[paramName] = {
                                     type: paramTypeName,
                                     value: processedValue
@@ -356,14 +243,11 @@ export class VM {
                         }
                     }
                 }
-                
-                // 执行函数体
                 let result: unknown = undefined;
                 if (funcDescriptor.ast) {
                     for (const statement of funcDescriptor.ast.body) {
                         result = functionVM.executeNode(statement);
                         if (statement.type === NodeType.RETURN_STATEMENT) {
-                            // 处理返回值，确保是原始值
                             if (result && typeof result === 'object' && 'value' in result) {
                                 return (result as ValueDescriptor).value;
                             }
@@ -371,17 +255,15 @@ export class VM {
                         }
                     }
                 }
-                
-                // 处理返回值
                 if (result && typeof result === 'object' && 'value' in result) {
                     return (result as ValueDescriptor).value;
                 }
                 return result;
             };
-            
+
             return funcExecutor(preparedArgs, this);
         }
-        
+
         throw new WenyanError(`函数「${name}」未实现执行逻辑`);
     }
     private executeExpression(node: ExpressionNode): unknown {
@@ -409,22 +291,15 @@ export class VM {
     }
     private resolveIdentifier(node: IdentifierNode): unknown {
         const { name } = node;
-        
-        // 特殊处理阴阳类型字面量
         if (name === "是") {
             return true;
         } else if (name === "否") {
             return false;
         }
-        
-        // 先在当前环境查找
         if (this.environment.variables[name] !== undefined) {
             const valueDescriptor = this.environment.variables[name] as ValueDescriptor;
-            // 返回值而不是描述符
             return valueDescriptor.value;
         }
-        
-        // 如果当前环境没有，在父环境中查找
         let currentEnv = this.environment;
         while (currentEnv.parent) {
             currentEnv = currentEnv.parent;
@@ -433,32 +308,25 @@ export class VM {
                 return valueDescriptor.value;
             }
         }
-        
-        // 查找函数
         if (this.environment.functions[name] !== undefined) {
             return this.environment.functions[name];
         }
-        
         throw new WenyanError(`尚未建量「${name}」`);
     }
     public setVariable(name: string, value: unknown, type: string = '数'): void {
-        // 推断类型
         if (!type) {
             if (typeof value === 'string') type = '文言';
             else if (typeof value === 'boolean') type = '阴阳';
         }
-        
         this.environment.variables[name] = {
             type,
             value
         };
     }
-    
     public getVariable(name: string): unknown {
         const descriptor = this.environment.variables[name];
         return descriptor ? (descriptor as ValueDescriptor).value : undefined;
     }
-    
     public registerFunction(name: string, func: FunctionExecutor | FunctionDescriptor): void {
         if (typeof func === 'function') {
             this.environment.functions[name] = {
@@ -475,16 +343,66 @@ export class VM {
         return { ...this.environment };
     }
     private executeFunctionDeclaration(node: FunctionDeclarationNode): void {
-        const { name, parameters, body } = node;
-        
-        // 创建函数描述符，只需存储AST即可，执行器逻辑在调用时动态创建
+        const { name } = node;
         const funcDescriptor: FunctionDescriptor = {
             ast: node
         };
-        
         this.environment.functions[name] = funcDescriptor;
     }
     private executeReturnStatement(node: ReturnStatementNode): unknown {
         return this.executeNode(node.expression);
+    }
+    private flattenModule(module: ModuleLibrary): ModuleLibrary {
+        const result: Environment = {
+            variables: {},
+            functions: {},
+            classes: {},
+            modules: {}
+        };
+        if (module.parent) {
+            const parentResult = this.flattenModule(module.parent);
+            if (parentResult.variables) {
+                Object.assign(result.variables, parentResult.variables);
+            }
+            if (parentResult.functions) {
+                Object.assign(result.functions, parentResult.functions);
+            }
+            if (parentResult.classes) {
+                Object.assign(result.classes, parentResult.classes);
+            }
+            if (parentResult.modules) {
+                Object.assign(result.modules, parentResult.modules);
+            }
+        }
+        if (module.variables) {
+            Object.assign(result.variables, module.variables);
+        }
+        if (module.functions) {
+            Object.assign(result.functions, module.functions);
+        }
+        if (module.classes) {
+            Object.assign(result.classes, module.classes);
+        }
+        if (module.modules) {
+            Object.assign(result.modules, module.modules);
+        }
+        return result;
+    }
+    private getModuleAllSymbols(module: ModuleLibrary, andParent: boolean = true): string[] {
+        const result = [];
+        const full = andParent ? this.flattenModule(module) : module;
+        if (full.variables) {
+            result.push(...Object.keys(full.variables));
+        }
+        if (full.functions) {
+            result.push(...Object.keys(full.functions));
+        }
+        if (full.classes) {
+            result.push(...Object.keys(full.classes));
+        }
+        if (full.modules) {
+            result.push(...Object.keys(full.modules));
+        }
+        return result;
     }
 }
