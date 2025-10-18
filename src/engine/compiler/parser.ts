@@ -275,31 +275,31 @@ export class Parser {
     private parsePrimary(): IdentifierNode | StringLiteralNode | NumberLiteralNode {
         const token = this.consume();
         switch (token.type) {
-        case TokenType.IDENTIFIER:
-            return {
-                type: NodeType.IDENTIFIER,
-                name: token.value,
-                line: token.line,
-                column: token.column
-            };
-        case TokenType.NUMBER: {
-            const numericValue = parseInt(token.value.replace(/[^0-9]/g, ""));
-            return {
-                type: NodeType.NUMBER_LITERAL,
-                value: numericValue,
-                line: token.line,
-                column: token.column
-            };
-        }
-        case TokenType.STRING:
-            return {
-                type: NodeType.STRING_LITERAL,
-                value: token.value,
-                line: token.line,
-                column: token.column
-            };
-        default:
-            throw new Error(`Unexpected token: ${token.value} at line ${token.line}, column ${token.column}`);
+            case TokenType.IDENTIFIER:
+                return {
+                    type: NodeType.IDENTIFIER,
+                    name: token.value,
+                    line: token.line,
+                    column: token.column
+                };
+            case TokenType.NUMBER: {
+                const numericValue = parseInt(token.value.replace(/[^0-9]/g, ""));
+                return {
+                    type: NodeType.NUMBER_LITERAL,
+                    value: numericValue,
+                    line: token.line,
+                    column: token.column
+                };
+            }
+            case TokenType.STRING:
+                return {
+                    type: NodeType.STRING_LITERAL,
+                    value: token.value,
+                    line: token.line,
+                    column: token.column
+                };
+            default:
+                throw new Error(`于第${token.line}行、${token.column}列，遇非所期之令牌「${token.value}」`);
         }
     }
 
@@ -321,15 +321,12 @@ export class Parser {
     // 期望下一个令牌是指定类型
     private expect(type: TokenType, expectedValue?: string): Token {
         const token = this.peek();
-
         if (!token || token.type !== type) {
-            throw new Error(`Expected token of type ${TokenType[type]}, but got ${token ? TokenType[token.type] : "end of input"}`);
+            throw new Error(`期得${TokenType[type]}之令牌，然见${token ? TokenType[token.type] : '文末'}`);
         }
-
         if (expectedValue && token.value !== expectedValue) {
-            throw new Error(`Expected token value "${expectedValue}", but got "${token.value}"`);
+            throw new Error(`期得${expectedValue}之值，然见${token.value}`);
         }
-
         return this.consume();
     }
 }
