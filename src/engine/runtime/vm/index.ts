@@ -1,3 +1,4 @@
+import { WenyanError } from "../../common/exceptions";
 import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionCallNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode } from "../../compiler/ast";
 import { Runtime } from "../index";
 
@@ -44,7 +45,7 @@ export class VM {
         const { moduleName, symbols } = node;
         const module = this.runtime.loadModule(moduleName);
         if (!module) {
-            throw new Error(`构件「${moduleName}」加载无果`);
+            throw new WenyanError(`构件「${moduleName}」加载无果`);
         }
         const importedSymbols: Record<string, unknown> = {};
         for (const symbol of symbols) {
@@ -55,7 +56,7 @@ export class VM {
                 }
                 importedSymbols[symbol] = moduleFunc;
             } else {
-                throw new Error(`「${symbol}」未建于构件「${moduleName}」之内`);
+                throw new WenyanError(`「${symbol}」未建于构件「${moduleName}」之内`);
             }
         }
         return importedSymbols;
@@ -64,7 +65,7 @@ export class VM {
         const { name, arguments: args } = node;
         const func = this.environment.functions[name];
         if (!func) {
-            throw new Error(`尚未建「${name}」之涵义`);
+            throw new WenyanError(`尚未建「${name}」之涵义`);
         }
         const preparedArgs: Record<string, unknown> = {};
         for (const [key, valueNode] of Object.entries(args)) {
@@ -88,7 +89,7 @@ export class VM {
             case "除":
                 return leftNum / rightNum;
             default:
-                throw new Error(`未知算符「${operator}」`);
+                throw new WenyanError(`未知算符「${operator}」`);
         }
     }
     private resolveIdentifier(node: IdentifierNode): unknown {
@@ -99,7 +100,7 @@ export class VM {
         if (this.environment.functions[name] !== undefined) {
             return this.environment.functions[name];
         }
-        throw new Error(`尚未建量「${name}」`);
+        throw new WenyanError(`尚未建量「${name}」`);
     }
     public setVariable(name: string, value: unknown): void {
         this.environment.variables[name] = value;

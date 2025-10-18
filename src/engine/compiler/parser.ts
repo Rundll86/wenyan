@@ -1,3 +1,4 @@
+import { WenyanError } from "../common/exceptions";
 import { Token, TokenType, Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ParameterNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode } from "./ast";
 
 export class Parser {
@@ -206,7 +207,7 @@ export class Parser {
                     column: token.column
                 };
             default:
-                throw new Error(`于第${token.line}行、${token.column}列，遇非所欲之令牌「${token.value}」`);
+                throw new WenyanError(`于第${token.line}行、${token.column}列，遇非所欲之令牌「${token.value}」`);
         }
     }
     private consume(): Token {
@@ -221,10 +222,10 @@ export class Parser {
     private expect(type: TokenType, expectedValue?: string): Token {
         const token = this.peek();
         if (!token || token.type !== type) {
-            throw new Error(`欲得${TokenType[type]}令牌，然见${token ? TokenType[token.type] : '文末'}`);
+            throw new WenyanError(`欲得${TokenType[type]}令牌，然见${token ? TokenType[token.type] : '文末'}`);
         }
         if (expectedValue && token.value !== expectedValue) {
-            throw new Error(`欲得${expectedValue}值，然见${token.value}`);
+            throw new WenyanError(`欲得${expectedValue}值，然见${token.value}`);
         }
         return this.consume();
     }

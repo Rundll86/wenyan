@@ -1,3 +1,4 @@
+import { WenyanError } from "../common/exceptions";
 import { Token, TokenType } from "./ast";
 
 export class Lexer {
@@ -66,7 +67,7 @@ export class Lexer {
             }
             this.position++;
             this.column++;
-            throw new Error(`有未识之符「${char}」于第${this.line}行，第${this.column}列`);
+            throw new WenyanError(`有未识之符「${char}」于第${this.line}行，第${this.column}列`);
         }
         return this.tokens;
     }
@@ -94,7 +95,7 @@ export class Lexer {
             this.position++;
             this.column++;
         } else {
-            console.warn(`有未闭字符串于第${this.line}行`);
+            throw new WenyanError(`有未闭字符串于第${this.line}行，第${this.column}列`);
         }
         this.tokens.push({
             type: TokenType.STRING,
