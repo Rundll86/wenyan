@@ -27,6 +27,11 @@ program.command("运转 <文章之所在>")
         const parser = new Parser(tokens);
         const ast = parser.parse();
         const runtime = new Runtime();
-        runtime.execute(ast);
+        try {
+            runtime.execute(ast);
+        } catch (error) {
+            console.error(`译毕，有误：${error}。`);
+            process.exit(1);
+        }
     });
 program.parse();
