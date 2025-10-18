@@ -275,30 +275,31 @@ export class Parser {
     private parsePrimary(): IdentifierNode | StringLiteralNode | NumberLiteralNode {
         const token = this.consume();
         switch (token.type) {
-            case TokenType.IDENTIFIER:
-                return {
-                    type: NodeType.IDENTIFIER,
-                    name: token.value,
-                    line: token.line,
-                    column: token.column
-                };
-            case TokenType.NUMBER:
-                const numericValue = parseInt(token.value.replace(/[^0-9]/g, ""));
-                return {
-                    type: NodeType.NUMBER_LITERAL,
-                    value: numericValue,
-                    line: token.line,
-                    column: token.column
-                };
-            case TokenType.STRING:
-                return {
-                    type: NodeType.STRING_LITERAL,
-                    value: token.value,
-                    line: token.line,
-                    column: token.column
-                };
-            default:
-                throw new Error(`Unexpected token: ${token.value} at line ${token.line}, column ${token.column}`);
+        case TokenType.IDENTIFIER:
+            return {
+                type: NodeType.IDENTIFIER,
+                name: token.value,
+                line: token.line,
+                column: token.column
+            };
+        case TokenType.NUMBER: {
+            const numericValue = parseInt(token.value.replace(/[^0-9]/g, ""));
+            return {
+                type: NodeType.NUMBER_LITERAL,
+                value: numericValue,
+                line: token.line,
+                column: token.column
+            };
+        }
+        case TokenType.STRING:
+            return {
+                type: NodeType.STRING_LITERAL,
+                value: token.value,
+                line: token.line,
+                column: token.column
+            };
+        default:
+            throw new Error(`Unexpected token: ${token.value} at line ${token.line}, column ${token.column}`);
         }
     }
 
