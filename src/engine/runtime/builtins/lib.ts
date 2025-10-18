@@ -1,0 +1,1 @@
+export * as 志者 from "./志者";

@@ -1,0 +1,1 @@
+export type ModuleLibrary = Record<string, unknown>;

@@ -3,9 +3,9 @@ import { Runtime } from "../index";
 
 // 执行环境接口
 export interface Environment {
-  variables: Record<string, unknown>;
-  functions: Record<string, (args: Record<string, unknown>, vm?: VM) => unknown>;
-  modules: Record<string, Record<string, unknown>>;
+    variables: Record<string, unknown>;
+    functions: Record<string, (args: Record<string, unknown>, vm?: VM) => unknown>;
+    modules: Record<string, Record<string, unknown>>;
 }
 
 // 虚拟机类，负责执行AST
@@ -25,11 +25,11 @@ export class VM {
     // 执行整个程序
     public execute(program: ProgramNode): unknown {
         let result: unknown = null;
-    
+
         for (const node of program.body) {
             result = this.executeNode(node);
         }
-    
+
         return result;
     }
 
@@ -57,16 +57,16 @@ export class VM {
     // 执行导入声明
     private executeImportDeclaration(node: ImportDeclarationNode): Record<string, unknown> {
         const { moduleName, symbols } = node;
-    
+
         // 加载模块
         const module = this.runtime.loadModule(moduleName);
         if (!module) {
             throw new Error(`无法加载模块: ${moduleName}`);
         }
-    
+
         // 将符号导入到当前环境
         const importedSymbols: Record<string, unknown> = {};
-    
+
         for (const symbol of symbols) {
             if (symbol in module) {
                 const moduleFunc = module[symbol];
@@ -79,26 +79,26 @@ export class VM {
                 console.warn(`模块 ${moduleName} 中未找到符号: ${symbol}`);
             }
         }
-    
+
         return importedSymbols;
     }
 
     // 执行函数调用
     private executeFunctionCall(node: FunctionCallNode): unknown {
         const { name, arguments: args } = node;
-    
+
         // 查找函数
         const func = this.environment.functions[name];
         if (!func) {
             throw new Error(`未定义的函数: ${name}`);
         }
-    
+
         // 准备参数
         const preparedArgs: Record<string, unknown> = {};
         for (const [key, valueNode] of Object.entries(args)) {
             preparedArgs[key] = this.executeNode(valueNode);
         }
-    
+
         // 调用函数
         return func(preparedArgs, this);
     }
@@ -106,14 +106,14 @@ export class VM {
     // 执行表达式
     private executeExpression(node: ExpressionNode): number {
         const { left, operator, right } = node;
-    
+
         const leftValue = this.executeNode(left);
         const rightValue = this.executeNode(right);
-    
+
         // 添加类型断言确保值为数字
         const leftNum = Number(leftValue);
         const rightNum = Number(rightValue);
-    
+
         switch (operator) {
         case "加":
             return leftNum + rightNum;
@@ -131,17 +131,17 @@ export class VM {
     // 解析标识符
     private resolveIdentifier(node: IdentifierNode): unknown {
         const { name } = node;
-    
+
         // 优先查找变量
         if (this.environment.variables[name] !== undefined) {
             return this.environment.variables[name];
         }
-    
+
         // 查找函数
         if (this.environment.functions[name] !== undefined) {
             return this.environment.functions[name];
         }
-    
+
         throw new Error(`未定义的标识符: ${name}`);
     }
 

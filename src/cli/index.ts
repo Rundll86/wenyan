@@ -1,12 +1,11 @@
 import { program } from "commander";
-import { Parser } from "../engine/compiler/parser";
-import { Lexer } from "../engine/compiler/lexer";
 import fs from "fs/promises";
 import path from "path";
+import { Runtime, Lexer, Parser } from "../engine";
 
 program.helpCommand("助", "陈其辅佐之法");
 program.helpOption("-助, --助也", "陈其辅佐之法");
-program.description("解析古国文言抽象之树，运转今夕阵列之卷。");
+program.description("析古国文言抽象之树，运转今夕阵列之卷。");
 program.command("译 <文章之所在>")
     .option("-树, --抽象语法树 <文书之所在>", "抽象语法树阵 文书之所在")
     .option("-牌, --令牌 <文书之所在>", "令牌阵 文书之所在")
@@ -18,5 +17,16 @@ program.command("译 <文章之所在>")
         await fs.mkdir(filename, { recursive: true });
         await fs.writeFile(options.抽象语法树 || `${filename}/ast.json`, JSON.stringify(ast, null, 4));
         await fs.writeFile(options.令牌 || `${filename}/tokens.json`, JSON.stringify(tokens, null, 4));
+    });
+program.command("运转 <文章之所在>")
+    .description("运转文言文章")
+    .action(async (文章之所在) => {
+        const code = await fs.readFile(文章之所在, "utf-8");
+        const lexer = new Lexer(code);
+        const tokens = lexer.tokenize();
+        const parser = new Parser(tokens);
+        const ast = parser.parse();
+        const runtime = new Runtime();
+        runtime.execute(ast);
     });
 program.parse();
