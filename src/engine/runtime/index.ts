@@ -1,7 +1,7 @@
 import { ModuleLibrary } from "../common/structs";
 import { Node, NodeType, ProgramNode } from "../compiler/ast";
 import { VM, Environment } from "./vm";
-import * as builtinRaws from "../runtime/builtins/lib";
+import * as builtinRaws from "./builtins/lib";
 
 export const builtins = builtinRaws as Record<string, ModuleLibrary>;
 export type ModuleRegistry = Record<string, ModuleLibrary>;
@@ -39,7 +39,7 @@ export class Runtime {
     public loadModule(moduleName: string): ModuleLibrary | null {
         return this.moduleRegistry[moduleName] || null;
     }
-    public registerModule(name: string, module: ModuleLibrary): void {
+    public registerModule(name: string, module: any): void {
         this.moduleRegistry[name] = module;
     }
     private registerBuiltinModules(): void {
@@ -48,7 +48,8 @@ export class Runtime {
     private loadBuiltinModule(moduleName: string): void {
         const module = builtins[moduleName];
         if (module) {
-            this.registerModule(moduleName, module);
+            const actualModule = module.default || module;
+            this.registerModule(moduleName, actualModule);
         }
     }
     public getVM(): VM {

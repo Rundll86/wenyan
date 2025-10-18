@@ -332,6 +332,15 @@ export class Parser {
         const token = this.consume();
         switch (token.type) {
             case TokenType.IDENTIFIER:
+                // 处理阴阳类型的字面量
+                if (token.value === "是" || token.value === "否") {
+                    return {
+                        type: NodeType.NUMBER_LITERAL,
+                        value: token.value === "是" ? 1 : 0,
+                        line: token.line,
+                        column: token.column
+                    } as NumberLiteralNode;
+                }
                 return {
                     type: NodeType.IDENTIFIER,
                     name: token.value,

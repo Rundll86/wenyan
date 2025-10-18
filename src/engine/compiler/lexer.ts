@@ -204,6 +204,16 @@ export class Lexer {
                     column: this.column - value.length
                 });
                 break;
+            case "是":
+            case "否":
+                // 将阴阳类型的字面量识别为特殊的标识符
+                this.tokens.push({
+                    type: TokenType.IDENTIFIER,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
             default:
                 this.tokens.push({
                     type: TokenType.IDENTIFIER,

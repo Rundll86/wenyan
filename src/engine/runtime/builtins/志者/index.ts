@@ -1,9 +1,17 @@
-export function 曰(args: Record<string, unknown>): unknown {
-    const 内容 = args["文"];
-    console.log(内容);
-    return 内容;
-}
-export function 倾(): string {
-    console.error("尚未实现。");
-    return "";
-}
+import { Environment } from "../../../common/structs";
+
+export default {
+    functions: {
+        曰: {
+            builtin: {
+                parameters: [{
+                    type: "文言",
+                    name: "文",
+                }],
+                executor(args) {
+                    console.log(args.文);
+                }
+            }
+        }
+    }
+} satisfies Partial<Environment>;
