@@ -2,9 +2,16 @@ import { WenyanError } from "../../common/exceptions";
 import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, ReturnStatementNode, FunctionCallNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode } from "../../compiler/ast";
 import { Runtime } from "../index";
 
+export interface ClassType {
+    name: string;
+    validate: (value: unknown) => boolean;
+    create: (value: unknown) => unknown;
+}
+
 export interface Environment {
     variables: Record<string, unknown>;
     functions: Record<string, (args: Record<string, unknown>, vm?: VM) => unknown>;
+    classes: Record<string, ClassType>;
     modules: Record<string, Record<string, unknown>>;
     parent?: Environment;
 }
@@ -16,7 +23,34 @@ export class VM {
         this.environment = {
             variables: env?.variables || {},
             functions: env?.functions || {},
+            classes: env?.classes || this.createBuiltinClasses(),
             modules: env?.modules || {},
+        };
+    }
+    
+    private createBuiltinClasses(): Record<string, ClassType> {
+        return {
+            '文言': {
+                name: '文言',
+                validate: (value): boolean => typeof value === 'string',
+                create: (value): unknown => String(value)
+            },
+            '数': {
+                name: '数',
+                validate: (value): boolean => typeof value === 'number' && !isNaN(value),
+                create: (value): unknown => {
+                    const num = Number(value);
+                    if (isNaN(num)) {
+                        throw new WenyanError('不能转换为数字');
+                    }
+                    return num;
+                }
+            },
+            '阴阳': {
+                name: '阴阳',
+                validate: (value): boolean => typeof value === 'boolean',
+                create: (value): unknown => Boolean(value)
+            }
         };
     }
     public execute(program: ProgramNode): unknown {
@@ -54,17 +88,21 @@ export class VM {
     }
     private executeVariableDeclaration(node: VariableDeclarationNode): unknown {
         const value = this.executeNode(node.value);
-        let processedValue = value;
-        switch (node.typeName) {
-            case "数字":
-                processedValue = Number(value);
-                break;
-            case "文言":
-                processedValue = String(value);
-                break;
-            default:
-                throw new WenyanError(`未知数据类型: ${node.typeName}`);
+        
+        // 检查类型是否存在
+        const typeClass = this.environment.classes[node.typeName];
+        if (!typeClass) {
+            throw new WenyanError(`未知类型「${node.typeName}」`);
         }
+        
+        // 使用类型的create方法处理值
+        const processedValue = typeClass.create(value);
+        
+        // 验证处理后的值
+        if (!typeClass.validate(processedValue)) {
+            throw new WenyanError(`值不能转换为类型「${node.typeName}」`);
+        }
+        
         this.environment.variables[node.name] = processedValue;
         return processedValue;
     }
@@ -168,19 +206,37 @@ export class VM {
             const newEnv: Partial<Environment> = {
                 variables: { ...vm.environment.variables },
                 functions: { ...vm.environment.functions },
+                classes: { ...vm.environment.classes },
                 modules: { ...vm.environment.modules }
             };
             const functionVM = new VM(this.runtime, newEnv);
 
             for (const param of parameters) {
                 const paramName = param.name;
+                const paramTypeName = param.typeName;
+                
                 if (paramName in args) {
                     const argValue = args[paramName];
-                    if (typeof argValue === "string" && vm.environment.functions[argValue]) {
-                        functionVM.setVariable(paramName, vm.environment.functions[argValue]);
-                    } else {
-                        functionVM.setVariable(paramName, argValue);
+                    
+                    // 检查类型是否存在
+                    const typeClass = vm.environment.classes[paramTypeName];
+                    if (!typeClass) {
+                        throw new WenyanError(`未知类型「${paramTypeName}」`);
                     }
+                    
+                    // 处理函数引用的特殊情况
+                    let processedValue = argValue;
+                    if (typeof argValue === "string" && vm.environment.functions[argValue]) {
+                        processedValue = vm.environment.functions[argValue];
+                    } else {
+                        // 对非函数引用的值进行类型转换和验证
+                        processedValue = typeClass.create(argValue);
+                        if (!typeClass.validate(processedValue)) {
+                            throw new WenyanError(`参数「${paramName}」的值不能转换为类型「${paramTypeName}」`);
+                        }
+                    }
+                    
+                    functionVM.setVariable(paramName, processedValue);
                 } else {
                     throw new WenyanError(`用以「${name}」而缺「${paramName}」之值`);
                 }
