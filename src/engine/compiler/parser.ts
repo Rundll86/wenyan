@@ -28,7 +28,7 @@ export class Parser {
         if (!this.peek()) {
             return null;
         }
-        
+
         if (this.peek()?.type === TokenType.IMPORT_SYMBOL) {
             return this.parseImportDeclaration();
         } else if (this.peek()?.type === TokenType.FUNCTION) {
@@ -38,22 +38,16 @@ export class Parser {
         } else if (this.peek()?.type === TokenType.LET) {
             return this.parseVariableStatement();
         } else if (this.peek()?.type === TokenType.IDENTIFIER) {
-            // 保存当前位置以便在需要时恢复
             const savedPosition = this.position;
-            
-            // 检查函数调用的通用模式
             const nextToken = this.lookAhead(1);
             const nextNextToken = this.lookAhead(2);
-            
-            // 函数调用的通用模式判断
-            const isFunctionCallPattern = 
-                (nextToken?.type === TokenType.COMMA && 
-                 (nextNextToken?.type === TokenType.KNOWN || 
-                  nextNextToken?.type === TokenType.LEFT_BRACKET || 
-                  nextNextToken?.type === TokenType.IDENTIFIER)) ||
-                (nextToken?.type === TokenType.KNOWN || 
-                 nextToken?.type === TokenType.LEFT_BRACKET);
-            
+            const isFunctionCallPattern =
+                (nextToken?.type === TokenType.COMMA &&
+                    (nextNextToken?.type === TokenType.KNOWN ||
+                        nextNextToken?.type === TokenType.LEFT_BRACKET ||
+                        nextNextToken?.type === TokenType.IDENTIFIER)) ||
+                (nextToken?.type === TokenType.KNOWN ||
+                    nextToken?.type === TokenType.LEFT_BRACKET);
             try {
                 if (isFunctionCallPattern) {
                     return this.parseFunctionCall();
@@ -65,7 +59,6 @@ export class Parser {
                     return expr;
                 }
             } catch (e) {
-                // 如果解析失败，尝试另一种方式
                 this.position = savedPosition;
                 try {
                     if (isFunctionCallPattern) {
@@ -79,7 +72,6 @@ export class Parser {
                     }
                 } catch {
                     this.position = savedPosition;
-                    // 两种方式都失败，尝试基本表达式解析
                     try {
                         return this.parseExpression();
                     } catch {
@@ -97,25 +89,18 @@ export class Parser {
             }
         }
     }
-
     private parseVariableStatement(): Node {
-        const letToken = this.consume(); // 消耗"设"关键字并保存token
-        
-        // 检查是否有类型声明（格式：设 变量类型【变量名】为 值）
+        const letToken = this.consume();
         if (this.peek()?.type === TokenType.IDENTIFIER && this.lookAhead(1)?.type === TokenType.LEFT_BRACKET) {
-            // 变量声明（带类型）
             const typeName = this.consume().value;
-            this.consume(); // 【
+            this.consume();
             const name = this.consume().value;
-            this.consume(); // 】
-            this.consume(); // "为"
+            this.consume();
+            this.consume();
             const value = this.parseExpression();
-            
-            // 处理语句结束的句号
             if (this.peek()?.type === TokenType.PERIOD) {
                 this.consume();
             }
-            
             return {
                 type: NodeType.VARIABLE_DECLARATION,
                 typeName,
@@ -125,16 +110,12 @@ export class Parser {
                 column: letToken.column
             } as VariableDeclarationNode;
         } else {
-            // 变量赋值（不带类型）
             const name = this.consume().value;
-            this.consume(); // "为"
+            this.consume();
             const value = this.parseExpression();
-            
-            // 处理语句结束的句号
             if (this.peek()?.type === TokenType.PERIOD) {
                 this.consume();
             }
-            
             return {
                 type: NodeType.VARIABLE_ASSIGNMENT,
                 name,
@@ -196,32 +177,20 @@ export class Parser {
             }
         }
         this.expect(TokenType.COLON, "：");
-        
-        // 记录当前函数声明的缩进级别（列号）
         const functionIndentation = functionToken.column;
-        
         const body: Node[] = [];
-        
-        // 使用基于缩进的方法解析函数体，直到遇到缩进级别小于等于函数声明缩进级别的非空行
         while (this.position < this.length) {
             const nextToken = this.peek();
             if (!nextToken) break;
-            
-            // 直接使用下一个token的缩进级别
             const nextTokenIndent = nextToken.column;
-            
-            // 如果缩进级别小于等于函数声明的缩进级别，说明函数体结束
             if (nextTokenIndent <= functionIndentation) {
                 break;
             }
-            
-            // 解析当前语句（可能是嵌套函数、函数调用等）
             const node = this.parseStatement();
             if (node) {
                 body.push(node);
             }
         }
-        
         return {
             type: NodeType.FUNCTION_DECLARATION,
             name: functionName,
@@ -232,21 +201,13 @@ export class Parser {
         };
     }
     private parseFunctionCall(): FunctionCallNode {
-        // 通用函数调用解析
         const functionNameToken = this.consume();
         const functionName = functionNameToken.value;
-        
-        // 处理函数名后的逗号（如果有）
         if (this.peek()?.type === TokenType.COMMA) {
             this.consume();
         }
-        
-        // 解析参数
         const args: Record<string, Node> = {};
-        
-        // 通用参数解析循环
         while (this.peek()) {
-            // 处理已知参数模式：已知【参数名】为 值
             if (this.peek()?.type === TokenType.KNOWN) {
                 this.consume();
                 if (this.peek()?.type === TokenType.LEFT_BRACKET) {
@@ -256,14 +217,11 @@ export class Parser {
                     this.expect(TokenType.AS, "为");
                     const value = this.parseExpression();
                     args[paramNameToken.value] = value;
-                    
-                    // 处理参数间的逗号
                     if (this.peek()?.type === TokenType.COMMA) {
                         this.consume();
                     }
                 }
             }
-            // 处理直接参数模式：【参数名】为 值
             else if (this.peek()?.type === TokenType.LEFT_BRACKET) {
                 this.consume();
                 const paramNameToken = this.expect(TokenType.IDENTIFIER);
@@ -271,38 +229,27 @@ export class Parser {
                 this.expect(TokenType.AS, "为");
                 const value = this.parseExpression();
                 args[paramNameToken.value] = value;
-                
-                // 处理参数间的逗号
                 if (this.peek()?.type === TokenType.COMMA) {
                     this.consume();
                 }
             }
-            // 处理无参数名的简化参数模式（如果需要）
-            else if (this.peek()?.type === TokenType.IDENTIFIER || 
-                     this.peek()?.type === TokenType.NUMBER ||
-                     this.peek()?.type === TokenType.STRING) {
-                // 对于直接的表达式参数，可以给一个默认参数名
+            else if (this.peek()?.type === TokenType.IDENTIFIER ||
+                this.peek()?.type === TokenType.NUMBER ||
+                this.peek()?.type === TokenType.STRING) {
                 const paramName = `param_${Object.keys(args).length}`;
                 const value = this.parseExpression();
                 args[paramName] = value;
-                
-                // 处理参数间的逗号
                 if (this.peek()?.type === TokenType.COMMA) {
                     this.consume();
                 }
             }
             else {
-                // 遇到其他类型的token，结束参数解析
                 break;
             }
         }
-        
-        // 处理语句结束的句号
         if (this.peek()?.type === TokenType.PERIOD) {
             this.consume();
         }
-        
-        // 返回标准的函数调用节点
         return {
             type: NodeType.FUNCTION_CALL,
             name: functionName,
@@ -310,22 +257,6 @@ export class Parser {
             line: functionNameToken.line,
             column: functionNameToken.column
         };
-    }
-    private isInExpressionContext(): boolean {
-        const currentPosition = this.position;
-        let i = 1;
-        while (currentPosition - i >= 0 && i <= 10) {
-            const prevToken = this.tokens[currentPosition - i];
-            if ([TokenType.AS, TokenType.LEFT_BRACKET, TokenType.RIGHT_BRACKET, TokenType.COMMA].includes(prevToken.type)) {
-                return true;
-            }
-            i++;
-        }
-        const nextToken = this.lookAhead(1);
-        if (nextToken && nextToken.type === TokenType.IDENTIFIER) {
-            return true;
-        }
-        return false;
     }
     private parseReturnStatement(): ReturnStatementNode {
         const returnToken = this.consume();
