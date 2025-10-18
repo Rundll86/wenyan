@@ -1,9 +1,9 @@
 import { ModuleLibrary } from "../common/structs";
 import { Node, NodeType, ProgramNode } from "../compiler/ast";
 import { VM, Environment } from "./vm";
-import * as builtinLibs from "../runtime/builtins/lib";
+import * as builtinRaws from "../runtime/builtins/lib";
 
-export const builtins = builtinLibs as Record<string, ModuleLibrary>;
+export const builtins = builtinRaws as Record<string, ModuleLibrary>;
 export type ModuleRegistry = Record<string, ModuleLibrary>;
 export class Runtime {
     private vm: VM;

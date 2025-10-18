@@ -1,7 +1,8 @@
 import { program } from "commander";
 import fs from "fs/promises";
 import path from "path";
-import { Runtime, Lexer, Parser } from "../engine";
+import { Runtime, Lexer, Parser, ProgramNode } from "../engine";
+import { WenyanError } from "../engine/common/exceptions";
 
 program.helpCommand("助", "陈其辅佐之法");
 program.helpOption("-助, --助也", "陈其辅佐之法");
@@ -21,17 +22,29 @@ program.command("译 <文章之所在>")
 program.command("运转 <文章之所在>")
     .description("运转文言文章")
     .action(async (文章之所在) => {
-        const code = await fs.readFile(文章之所在, "utf-8");
-        const lexer = new Lexer(code);
-        const tokens = lexer.tokenize();
-        const parser = new Parser(tokens);
-        const ast = parser.parse();
-        const runtime = new Runtime();
+        let ast: ProgramNode | null = null;
         try {
-            runtime.execute(ast);
+            const code = await fs.readFile(文章之所在, "utf-8");
+            const lexer = new Lexer(code);
+            const tokens = lexer.tokenize();
+            const parser = new Parser(tokens);
+            ast = parser.parse();
         } catch (error) {
-            console.error(`译毕，有误：${error}。`);
-            process.exit(1);
+            if (error instanceof WenyanError) {
+                console.error(`译毕，有误：${error.message}。`);
+                process.exit(1);
+            }
+        }
+        try {
+            if (ast) {
+                const runtime = new Runtime();
+                runtime.execute(ast);
+            }
+        } catch (error) {
+            if (error instanceof WenyanError) {
+                console.error(`行毕，有误：${error.message}。`);
+                process.exit(1);
+            }
         }
     });
 program.parse();

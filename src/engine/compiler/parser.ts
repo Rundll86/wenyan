@@ -222,10 +222,10 @@ export class Parser {
     private expect(type: TokenType, expectedValue?: string): Token {
         const token = this.peek();
         if (!token || token.type !== type) {
-            throw new WenyanError(`欲得「${expectedValue || TokenType[type]}」令牌，然见${token ? TokenType[token.type] : '文末'}`);
+            throw new WenyanError(`欲得「${expectedValue || TokenType[type]}」，然见${token ? TokenType[token.type] : '文末'}`);
         }
         if (expectedValue && token.value !== expectedValue) {
-            throw new WenyanError(`欲得「${expectedValue}」值，然见${token.value}`);
+            throw new WenyanError(`欲得「${expectedValue}」，然见${token.value}`);
         }
         return this.consume();
     }
