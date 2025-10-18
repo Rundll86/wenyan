@@ -27,7 +27,7 @@ export class VM {
             modules: env?.modules || {},
         };
     }
-    
+
     private createBuiltinClasses(): Record<string, ClassType> {
         return {
             '文言': {
@@ -83,26 +83,19 @@ export class VM {
             case NodeType.VARIABLE_ASSIGNMENT:
                 return this.executeVariableAssignment(node as VariableAssignmentNode);
             default:
-                throw new WenyanError(`未知节点类型「${node.type}」`);
+                throw new WenyanError(`抽象语法树无效，未知节点之型「${node.type}」`);
         }
     }
     private executeVariableDeclaration(node: VariableDeclarationNode): unknown {
         const value = this.executeNode(node.value);
-        
-        // 检查类型是否存在
         const typeClass = this.environment.classes[node.typeName];
         if (!typeClass) {
-            throw new WenyanError(`未知类型「${node.typeName}」`);
+            throw new WenyanError(`未明其类「${node.typeName}」`);
         }
-        
-        // 使用类型的create方法处理值
         const processedValue = typeClass.create(value);
-        
-        // 验证处理后的值
         if (!typeClass.validate(processedValue)) {
-            throw new WenyanError(`值不能转换为类型「${node.typeName}」`);
+            throw new WenyanError(`值属「${processedValue}」，难化为「${node.typeName}」`);
         }
-        
         this.environment.variables[node.name] = processedValue;
         return processedValue;
     }
@@ -176,7 +169,7 @@ export class VM {
         if (operatorFunction) {
             return operatorFunction({ "左": leftValue, "右": rightValue }, this);
         }
-        throw new WenyanError(`未知算符「${operator}」或无对应的操作函数`);
+        throw new WenyanError(`未知算符「${operator}」且无对其涵义。`);
     }
     private resolveIdentifier(node: IdentifierNode): unknown {
         const { name } = node;
@@ -214,28 +207,21 @@ export class VM {
             for (const param of parameters) {
                 const paramName = param.name;
                 const paramTypeName = param.typeName;
-                
                 if (paramName in args) {
                     const argValue = args[paramName];
-                    
-                    // 检查类型是否存在
                     const typeClass = vm.environment.classes[paramTypeName];
                     if (!typeClass) {
-                        throw new WenyanError(`未知类型「${paramTypeName}」`);
+                        throw new WenyanError(`未明其类「${paramTypeName}」`);
                     }
-                    
-                    // 处理函数引用的特殊情况
                     let processedValue = argValue;
                     if (typeof argValue === "string" && vm.environment.functions[argValue]) {
                         processedValue = vm.environment.functions[argValue];
                     } else {
-                        // 对非函数引用的值进行类型转换和验证
                         processedValue = typeClass.create(argValue);
                         if (!typeClass.validate(processedValue)) {
-                            throw new WenyanError(`参数「${paramName}」的值不能转换为类型「${paramTypeName}」`);
+                            throw new WenyanError(`参属「${processedValue}」，难化为「${paramTypeName}」`);
                         }
                     }
-                    
                     functionVM.setVariable(paramName, processedValue);
                 } else {
                     throw new WenyanError(`用以「${name}」而缺「${paramName}」之值`);
