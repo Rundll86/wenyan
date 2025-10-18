@@ -3,7 +3,7 @@ import { Node, NodeType, ProgramNode } from "../compiler/ast";
 import { VM } from "./vm";
 import * as builtinRaws from "./builtins/lib";
 
-export const builtins = builtinRaws as Record<string, ModuleLibrary>;
+export const builtins = builtinRaws as Record<string, { default: ModuleLibrary }>;
 export type ModuleRegistry = Record<string, ModuleLibrary>;
 export class Runtime {
     private vm: VM;
@@ -80,7 +80,7 @@ export class Runtime {
         this.loadBuiltinModule("志者");
     }
     private loadBuiltinModule(moduleName: string): void {
-        const module = builtins[moduleName];
+        const module = builtins[moduleName].default;
         if (module) {
             const actualModule = module;
             this.registerModule(moduleName, actualModule);

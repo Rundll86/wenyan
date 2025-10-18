@@ -1,4 +1,4 @@
-import { Environment } from "../../../common/structs";
+import { ModuleLibrary } from "../../../common/structs";
 
 export default {
     functions: {
@@ -8,11 +8,10 @@ export default {
                     type: "文言",
                     name: "文",
                 }],
-                executor(args, vm) {
+                executor(args) {
                     console.log(args.文);
-                    console.log(vm.getEnvironment());
                 }
             }
         }
     }
-} satisfies Partial<Environment>;
+} satisfies ModuleLibrary;
