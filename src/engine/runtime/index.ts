@@ -14,7 +14,6 @@ export class Runtime {
         this.defaultEnvironment = {};
         this.vm = new VM(this, this.defaultEnvironment);
         this.registerBuiltinModules();
-        this.initializeDefaultEnvironment();
     }
     public execute(ast: Node | Node[]): unknown {
         if (Array.isArray(ast)) {
@@ -61,21 +60,6 @@ export class Runtime {
             ...env
         });
         return newVM;
-    }
-
-    private initializeDefaultEnvironment(): void {
-        // 初始化基本的运算符函数
-        const basicOperators = {
-            "加": (args: Record<string, unknown>) => Number(args["左"]) + Number(args["右"]),
-            "减": (args: Record<string, unknown>) => Number(args["左"]) - Number(args["右"]),
-            "乘": (args: Record<string, unknown>) => Number(args["左"]) * Number(args["右"]),
-            "除": (args: Record<string, unknown>) => Number(args["左"]) / Number(args["右"]),
-            "幂": (args: Record<string, unknown>) => Math.pow(Number(args["左"]), Number(args["右"])),
-            "模": (args: Record<string, unknown>) => Number(args["左"]) % Number(args["右"])
-        };
-        Object.entries(basicOperators).forEach(([name, func]) => {
-            this.vm.registerFunction(name, func as (args: Record<string, unknown>) => unknown);
-        });
     }
 }
 export { VM };
