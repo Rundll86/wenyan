@@ -210,10 +210,48 @@ export class Parser {
         };
     }
     private parseExpression(): Node {
-        let left = this.parsePrimary();
-        while (this.peek()?.type === TokenType.IDENTIFIER) {
+        return this.parseAdditive();
+    }
+
+    private parseAdditive(): Node {
+        let left = this.parseMultiplicative();
+        while (this.peek()?.type === TokenType.IDENTIFIER && ['加', '减'].includes(this.peek()!.value)) {
             const operatorToken = this.consume();
-            const right = this.parsePrimary();
+            const right = this.parseMultiplicative();
+            left = {
+                type: NodeType.EXPRESSION,
+                left,
+                operator: operatorToken.value,
+                right,
+                line: left.line,
+                column: left.column
+            } as ExpressionNode;
+        }
+        return left;
+    }
+
+    private parseMultiplicative(): Node {
+        let left = this.parseExponentiation();
+        while (this.peek()?.type === TokenType.IDENTIFIER && ['乘', '除', '模'].includes(this.peek()!.value)) {
+            const operatorToken = this.consume();
+            const right = this.parseExponentiation();
+            left = {
+                type: NodeType.EXPRESSION,
+                left,
+                operator: operatorToken.value,
+                right,
+                line: left.line,
+                column: left.column
+            } as ExpressionNode;
+        }
+        return left;
+    }
+
+    private parseExponentiation(): Node {
+        let left = this.parsePrimary();
+        while (this.peek()?.type === TokenType.IDENTIFIER && ['幂'].includes(this.peek()!.value)) {
+            const operatorToken = this.consume();
+            const right = this.parseExponentiation();
             left = {
                 type: NodeType.EXPRESSION,
                 left,
