@@ -148,61 +148,61 @@ export class Lexer {
         }
         const value = this.code.substring(start, this.position);
         switch (value) {
-            case "涵义":
-                this.tokens.push({
-                    type: TokenType.FUNCTION,
-                    value,
-                    line: this.line,
-                    column: this.column - value.length
-                });
-                break;
-            case "需知":
-                this.tokens.push({
-                    type: TokenType.PARAM,
-                    value,
-                    line: this.line,
-                    column: this.column - value.length
-                });
-                break;
-            case "求":
-                this.tokens.push({
-                    type: TokenType.RETURN,
-                    value,
-                    line: this.line,
-                    column: this.column - value.length
-                });
-                break;
-            case "已知":
-                this.tokens.push({
-                    type: TokenType.KNOWN,
-                    value,
-                    line: this.line,
-                    column: this.column - value.length
-                });
-                break;
-            case "为":
-                this.tokens.push({
-                    type: TokenType.AS,
-                    value,
-                    line: this.line,
-                    column: this.column - value.length
-                });
-                break;
-            case "曰":
-                this.tokens.push({
-                    type: TokenType.IDENTIFIER,
-                    value,
-                    line: this.line,
-                    column: this.column - value.length
-                });
-                break;
-            default:
-                this.tokens.push({
-                    type: TokenType.IDENTIFIER,
-                    value,
-                    line: this.line,
-                    column: this.column - value.length
-                });
+        case "涵义":
+            this.tokens.push({
+                type: TokenType.FUNCTION,
+                value,
+                line: this.line,
+                column: this.column - value.length
+            });
+            break;
+        case "需知":
+            this.tokens.push({
+                type: TokenType.PARAM,
+                value,
+                line: this.line,
+                column: this.column - value.length
+            });
+            break;
+        case "求":
+            this.tokens.push({
+                type: TokenType.RETURN,
+                value,
+                line: this.line,
+                column: this.column - value.length
+            });
+            break;
+        case "已知":
+            this.tokens.push({
+                type: TokenType.KNOWN,
+                value,
+                line: this.line,
+                column: this.column - value.length
+            });
+            break;
+        case "为":
+            this.tokens.push({
+                type: TokenType.AS,
+                value,
+                line: this.line,
+                column: this.column - value.length
+            });
+            break;
+        case "曰":
+            this.tokens.push({
+                type: TokenType.IDENTIFIER,
+                value,
+                line: this.line,
+                column: this.column - value.length
+            });
+            break;
+        default:
+            this.tokens.push({
+                type: TokenType.IDENTIFIER,
+                value,
+                line: this.line,
+                column: this.column - value.length
+            });
         }
     }
     private addToken(type: TokenType, value: string): void {

@@ -183,31 +183,31 @@ export class Parser {
     private parsePrimary(): IdentifierNode | StringLiteralNode | NumberLiteralNode {
         const token = this.consume();
         switch (token.type) {
-            case TokenType.IDENTIFIER:
-                return {
-                    type: NodeType.IDENTIFIER,
-                    name: token.value,
-                    line: token.line,
-                    column: token.column
-                };
-            case TokenType.NUMBER: {
-                const numericValue = parseInt(token.value.replace(/[^0-9]/g, ""));
-                return {
-                    type: NodeType.NUMBER_LITERAL,
-                    value: numericValue,
-                    line: token.line,
-                    column: token.column
-                };
-            }
-            case TokenType.STRING:
-                return {
-                    type: NodeType.STRING_LITERAL,
-                    value: token.value,
-                    line: token.line,
-                    column: token.column
-                };
-            default:
-                throw new WenyanError(`于第${token.line}行、${token.column}列，遇非所欲之令牌「${token.value}」`);
+        case TokenType.IDENTIFIER:
+            return {
+                type: NodeType.IDENTIFIER,
+                name: token.value,
+                line: token.line,
+                column: token.column
+            };
+        case TokenType.NUMBER: {
+            const numericValue = parseInt(token.value.replace(/[^0-9]/g, ""));
+            return {
+                type: NodeType.NUMBER_LITERAL,
+                value: numericValue,
+                line: token.line,
+                column: token.column
+            };
+        }
+        case TokenType.STRING:
+            return {
+                type: NodeType.STRING_LITERAL,
+                value: token.value,
+                line: token.line,
+                column: token.column
+            };
+        default:
+            throw new WenyanError(`于第${token.line}行、${token.column}列，遇非所欲之令牌「${token.value}」`);
         }
     }
     private consume(): Token {
@@ -222,7 +222,7 @@ export class Parser {
     private expect(type: TokenType, expectedValue?: string): Token {
         const token = this.peek();
         if (!token || token.type !== type) {
-            throw new WenyanError(`欲得「${expectedValue || TokenType[type]}」，然见${token ? TokenType[token.type] : '文末'}`);
+            throw new WenyanError(`欲得「${expectedValue || TokenType[type]}」，然见${token ? TokenType[token.type] : "文末"}`);
         }
         if (expectedValue && token.value !== expectedValue) {
             throw new WenyanError(`欲得「${expectedValue}」，然见${token.value}`);
