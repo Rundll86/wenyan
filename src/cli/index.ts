@@ -2,12 +2,12 @@ import { program } from "commander";
 import fs from "fs/promises";
 import { getAST, getTokens, run } from "./step";
 import pack from "../../package.json";
-import { descriptions, PROJECT_NAME } from "../engine/common/constans";
+import { DESCRIPTIONS, PROJECT_NAME } from "../engine/common/constans";
 
 program.name(PROJECT_NAME)
     .nameFromFilename(PROJECT_NAME)
     .version(pack.version, "-序, --刊序", "请示刊序")
-    .description(descriptions[Math.floor(Math.random() * descriptions.length)])
+    .description(DESCRIPTIONS[Math.floor(Math.random() * DESCRIPTIONS.length)])
     .usage("<指示>");
 
 program.helpCommand("助 <指示>", "对指示陈其辅佐之法");

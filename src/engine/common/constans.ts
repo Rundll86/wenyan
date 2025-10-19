@@ -1,5 +1,5 @@
 export const PROJECT_NAME = "文言";
-export const descriptions = [
+export const DESCRIPTIONS = [
     "析古文之法理，以今之术，彰旧学之华光。",
     "文言之道，在乎心手相应。",
     "一字一句，皆为法理；一行一段，皆是玄机。",
