@@ -287,7 +287,7 @@ export class VM {
         };
         
         // 处理条件运算符
-        const conditionalMap: Record<string, (a: any, b: any) => boolean> = {
+        const conditionalMap: Record<string, (a: unknown, b: unknown) => boolean> = {
             "是": (a, b) => a === b,
             "不是": (a, b) => a !== b,
             "胜于": (a, b) => a >= b,
