@@ -197,6 +197,46 @@ export class Lexer {
                     column: this.column - value.length
                 });
                 break;
+            case "倘若":
+                this.tokens.push({
+                    type: TokenType.IF,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
+            case "再若":
+                this.tokens.push({
+                    type: TokenType.ELSE_IF,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
+            case "否则":
+                this.tokens.push({
+                    type: TokenType.ELSE,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
+            case "当":
+                this.tokens.push({
+                    type: TokenType.WHEN,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
+            case "时":
+                this.tokens.push({
+                    type: TokenType.WHILE,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
             case "曰":
                 this.tokens.push({
                     type: TokenType.IDENTIFIER,

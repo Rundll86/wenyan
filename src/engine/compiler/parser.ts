@@ -1,5 +1,5 @@
 import { WenyanError } from "../common/exceptions";
-import { Token, TokenType, Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ParameterNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode } from "./ast";
+import { Token, TokenType, Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ParameterNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode, IfStatementNode, WhileStatementNode } from "./ast";
 import { FALSY, TRUTHY } from "./defines/characters";
 
 export class Parser {
@@ -38,6 +38,10 @@ export class Parser {
             return this.parseReturnStatement();
         } else if (this.peek()?.type === TokenType.LET) {
             return this.parseVariableStatement();
+        } else if (this.peek()?.type === TokenType.IF) {
+            return this.parseIfStatement();
+        } else if (this.peek()?.type === TokenType.WHEN) {
+            return this.parseWhileStatement();
         } else if (this.peek()?.type === TokenType.IDENTIFIER) {
             const savedPosition = this.position;
             const nextToken = this.lookAhead(1);
@@ -385,5 +389,109 @@ export class Parser {
             throw new WenyanError(`欲得「${expectedValue}」，然见${token.value}`);
         }
         return this.consume();
+    }
+
+    private parseIfStatement(): IfStatementNode {
+        const ifToken = this.consume();
+        const condition = this.parseExpression();
+        
+        // 记录当前缩进级别，用于解析代码块
+        const ifIndentation = ifToken.column;
+        const body: Node[] = [];
+        
+        // 解析if的代码块
+        while (this.position < this.length) {
+            const nextToken = this.peek();
+            if (!nextToken || nextToken.column <= ifIndentation) {
+                break;
+            }
+            const node = this.parseStatement();
+            if (node) {
+                body.push(node);
+            }
+        }
+        
+        const elseIfs = [];
+        
+        // 解析else if部分
+        while (this.peek()?.type === TokenType.ELSE_IF) {
+            const elseIfToken = this.consume();
+            const elseIfCondition = this.parseExpression();
+            
+            const elseIfBody: Node[] = [];
+            while (this.position < this.length) {
+                const nextToken = this.peek();
+                if (!nextToken || nextToken.column <= elseIfToken.column) {
+                    break;
+                }
+                const node = this.parseStatement();
+                if (node) {
+                    elseIfBody.push(node);
+                }
+            }
+            
+            elseIfs.push({
+                condition: elseIfCondition,
+                body: elseIfBody
+            });
+        }
+        
+        const elseBody: Node[] = [];
+        
+        // 解析else部分
+        if (this.peek()?.type === TokenType.ELSE) {
+            const elseToken = this.consume();
+            
+            while (this.position < this.length) {
+                const nextToken = this.peek();
+                if (!nextToken || nextToken.column <= elseToken.column) {
+                    break;
+                }
+                const node = this.parseStatement();
+                if (node) {
+                    elseBody.push(node);
+                }
+            }
+        }
+        
+        return {
+            type: NodeType.IF_STATEMENT,
+            condition,
+            body,
+            elseIfs,
+            elseBody,
+            line: ifToken.line,
+            column: ifToken.column
+        } as IfStatementNode;
+    }
+
+    private parseWhileStatement(): WhileStatementNode {
+        const whenToken = this.consume();
+        this.expect(TokenType.WHILE, "时");
+        const condition = this.parseExpression();
+        
+        // 记录当前缩进级别，用于解析代码块
+        const whileIndentation = whenToken.column;
+        const body: Node[] = [];
+        
+        // 解析while的代码块
+        while (this.position < this.length) {
+            const nextToken = this.peek();
+            if (!nextToken || nextToken.column <= whileIndentation) {
+                break;
+            }
+            const node = this.parseStatement();
+            if (node) {
+                body.push(node);
+            }
+        }
+        
+        return {
+            type: NodeType.WHILE_STATEMENT,
+            condition,
+            body,
+            line: whenToken.line,
+            column: whenToken.column
+        } as WhileStatementNode;
     }
 }

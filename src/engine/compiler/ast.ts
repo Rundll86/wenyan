@@ -18,6 +18,11 @@ export enum TokenType {
     DOUBLE_QUOTE = "DOUBLE_QUOTE",
     IMPORT_SYMBOL = "IMPORT_SYMBOL",
     LET = "LET",
+    IF = "IF",
+    ELSE_IF = "ELSE_IF",
+    ELSE = "ELSE",
+    WHILE = "WHILE",
+    WHEN = "WHEN",
 }
 export interface Token {
     type: TokenType;
@@ -38,6 +43,8 @@ export enum NodeType {
     NUMBER_LITERAL = "NUMBER_LITERAL",
     VARIABLE_DECLARATION = "VARIABLE_DECLARATION",
     VARIABLE_ASSIGNMENT = "VARIABLE_ASSIGNMENT",
+    IF_STATEMENT = "IF_STATEMENT",
+    WHILE_STATEMENT = "WHILE_STATEMENT",
 }
 export interface Node {
     type: NodeType;
@@ -103,4 +110,18 @@ export interface VariableAssignmentNode extends Node {
     type: NodeType.VARIABLE_ASSIGNMENT;
     name: string;
     value: Node;
+}
+
+export interface IfStatementNode extends Node {
+    type: NodeType.IF_STATEMENT;
+    condition: Node;
+    body: Node[];
+    elseIfs?: { condition: Node; body: Node[] }[];
+    elseBody?: Node[];
+}
+
+export interface WhileStatementNode extends Node {
+    type: NodeType.WHILE_STATEMENT;
+    condition: Node;
+    body: Node[];
 }

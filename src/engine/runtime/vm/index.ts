@@ -1,6 +1,6 @@
 import { WenyanError } from "../../common/exceptions";
 import { Environment, ValueDescriptor, FunctionDescriptor, FunctionExecutor, ModuleLibrary } from "../../common/structs";
-import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, ReturnStatementNode, FunctionCallNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode } from "../../compiler/ast";
+import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode, IfStatementNode, WhileStatementNode } from "../../compiler/ast";
 import { FALSY, TRUTHY } from "../../compiler/defines/characters";
 import { Runtime } from "../index";
 
@@ -45,6 +45,10 @@ export class VM {
                 return this.executeVariableDeclaration(node as VariableDeclarationNode);
             case NodeType.VARIABLE_ASSIGNMENT:
                 return this.executeVariableAssignment(node as VariableAssignmentNode);
+            case NodeType.IF_STATEMENT:
+                return this.executeIfStatement(node as IfStatementNode);
+            case NodeType.WHILE_STATEMENT:
+                return this.executeWhileStatement(node as WhileStatementNode);
             default:
                 throw new WenyanError(`抽象语法树无效，未知节点之型「${node.type}」`);
         }
@@ -404,6 +408,82 @@ export class VM {
         if (full.modules) {
             result.push(...Object.keys(full.modules));
         }
+        return result;
+    }
+
+    private executeIfStatement(node: IfStatementNode): unknown {
+        // 执行条件表达式
+        const conditionValue = this.executeNode(node.condition);
+        
+        // 判断条件是否为真值（非0、非空字符串等）
+        const isTruthy = Boolean(conditionValue);
+        
+        if (isTruthy) {
+            // 执行if代码块
+            let result: unknown;
+            for (const statement of node.body) {
+                result = this.executeNode(statement);
+                // 如果遇到返回语句，立即返回
+                if (statement.type === NodeType.RETURN_STATEMENT) {
+                    return result;
+                }
+            }
+            return result;
+        } else {
+            // 检查else if条件
+            for (const elseIf of node.elseIfs || []) {
+                const elseIfConditionValue = this.executeNode(elseIf.condition);
+                if (elseIfConditionValue) {
+                    // 执行else if代码块
+                    let result: unknown;
+                    for (const statement of elseIf.body) {
+                        result = this.executeNode(statement);
+                        // 如果遇到返回语句，立即返回
+                        if (statement.type === NodeType.RETURN_STATEMENT) {
+                            return result;
+                        }
+                    }
+                    return result;
+                }
+            }
+            
+            // 执行else代码块
+            if (node.elseBody && node.elseBody.length > 0) {
+                let result: unknown;
+                for (const statement of node.elseBody) {
+                    result = this.executeNode(statement);
+                    // 如果遇到返回语句，立即返回
+                    if (statement.type === NodeType.RETURN_STATEMENT) {
+                        return result;
+                    }
+                }
+                return result;
+            }
+        }
+        
+        return undefined;
+    }
+
+    private executeWhileStatement(node: WhileStatementNode): unknown {
+        let result: unknown;
+        
+        // 循环执行，直到条件为假
+        while (true) {
+            const conditionValue = this.executeNode(node.condition);
+            if (!conditionValue) {
+                break;
+            }
+            
+            // 执行循环体
+            for (const statement of node.body) {
+                result = this.executeNode(statement);
+                // 如果遇到返回语句，立即返回
+                if (statement.type === NodeType.RETURN_STATEMENT) {
+                    return result;
+                }
+            }
+        }
+        
         return result;
     }
 }
