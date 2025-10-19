@@ -1,5 +1,6 @@
 import { WenyanError } from "../common/exceptions";
 import { Token, TokenType } from "./ast";
+import { FALSY, TRUTHY } from "./defines/characters";
 
 export class Lexer {
     private code: string;
@@ -204,8 +205,8 @@ export class Lexer {
                     column: this.column - value.length
                 });
                 break;
-            case "是":
-            case "否":
+            case TRUTHY:
+            case FALSY:
                 this.tokens.push({
                     type: TokenType.IDENTIFIER,
                     value,

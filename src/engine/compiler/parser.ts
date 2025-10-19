@@ -1,5 +1,6 @@
 import { WenyanError } from "../common/exceptions";
 import { Token, TokenType, Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ParameterNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode } from "./ast";
+import { FALSY, TRUTHY } from "./defines/characters";
 
 export class Parser {
     private tokens: Token[];
@@ -332,10 +333,10 @@ export class Parser {
         const token = this.consume();
         switch (token.type) {
             case TokenType.IDENTIFIER:
-                if (token.value === "是" || token.value === "否") {
+                if (token.value === TRUTHY || token.value === FALSY) {
                     return {
                         type: NodeType.NUMBER_LITERAL,
-                        value: token.value === "是" ? 1 : 0,
+                        value: token.value === TRUTHY ? 1 : 0,
                         line: token.line,
                         column: token.column
                     } as NumberLiteralNode;

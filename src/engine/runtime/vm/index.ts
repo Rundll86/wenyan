@@ -1,6 +1,7 @@
 import { WenyanError } from "../../common/exceptions";
 import { Environment, ValueDescriptor, FunctionDescriptor, FunctionExecutor, ModuleLibrary } from "../../common/structs";
 import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, ReturnStatementNode, FunctionCallNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode } from "../../compiler/ast";
+import { FALSY, TRUTHY } from "../../compiler/defines/characters";
 import { Runtime } from "../index";
 
 export class VM {
@@ -291,9 +292,9 @@ export class VM {
     }
     private resolveIdentifier(node: IdentifierNode): unknown {
         const { name } = node;
-        if (name === "是") {
+        if (name === TRUTHY) {
             return true;
-        } else if (name === "否") {
+        } else if (name === FALSY) {
             return false;
         }
         if (this.environment.variables[name] !== undefined) {
