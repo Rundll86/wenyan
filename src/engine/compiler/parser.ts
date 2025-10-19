@@ -555,7 +555,7 @@ export class Parser {
     private parseWhileStatement(): WhileStatementNode {
         const whenToken = this.consume();
         const condition = this.parseExpression();
-        this.expect(TokenType.WHILE, "时");
+        this.expect(TokenType.WHILE, "时复行");
         if (this.peek()?.type === TokenType.COLON) {
             this.consume();
         }
