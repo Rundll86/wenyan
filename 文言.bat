@@ -1,2 +1,2 @@
 @echo off
-node ./dist/cli %*
+node ./dist/src/cli %*
