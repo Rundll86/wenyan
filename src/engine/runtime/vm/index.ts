@@ -277,8 +277,6 @@ export class VM {
         const { left, operator, right } = node;
         const leftValue = this.executeNode(left);
         const rightValue = this.executeNode(right);
-        
-        // 处理算术运算符
         const arithmeticMap: Record<string, (a: number, b: number) => number> = {
             "减": (a, b) => a - b,
             "乘": (a, b) => a * b,
@@ -286,20 +284,18 @@ export class VM {
             "幂": Math.pow,
             "模": (a, b) => a % b
         };
-        
-        // 处理条件运算符
         const conditionalMap: Record<string, (a: unknown, b: unknown) => boolean> = {
             "是": (a, b) => a === b,
             "不是": (a, b) => a !== b,
             "胜于": (a, b) => {
                 if (typeof a !== "number" || typeof b !== "number") {
-                    throw new WenyanError("用胜于运算符时，左右之值非数，不可为比");
+                    throw new WenyanError("胜于算符左右之值非数，不可为比");
                 }
                 return a > b;
             },
             "不及": (a, b) => {
                 if (typeof a !== "number" || typeof b !== "number") {
-                    throw new WenyanError("用不及运算符时，左右之值非数，不可为比");
+                    throw new WenyanError("不及算符左右之值非数，不可为比");
                 }
                 return a < b;
             },
@@ -308,34 +304,26 @@ export class VM {
             "或者": (a, b) => Boolean(a) || Boolean(b),
             "或": (a, b) => Boolean(a) || Boolean(b)
         };
-        
-        // 特殊处理"加"运算符，支持字符串拼接
         if (operator === "加") {
-            // 如果有一方是字符串，则进行字符串拼接
             if (typeof leftValue === "string" || typeof rightValue === "string") {
                 return String(leftValue) + String(rightValue);
             }
-            // 否则进行数值相加
             const leftNum = Number(leftValue);
             const rightNum = Number(rightValue);
             return leftNum + rightNum;
         }
-        
         if (operator in arithmeticMap) {
             const leftNum = Number(leftValue);
             const rightNum = Number(rightValue);
             return arithmeticMap[operator](leftNum, rightNum);
         }
-        
         if (operator in conditionalMap) {
             return conditionalMap[operator](leftValue, rightValue);
         }
-        
         const operatorFuncDescriptor = this.environment.functions[operator];
         if (operatorFuncDescriptor && operatorFuncDescriptor.builtin && operatorFuncDescriptor.builtin.executor) {
             return operatorFuncDescriptor.builtin.executor({ "左": leftValue, "右": rightValue }, this);
         }
-        
         throw new WenyanError(`未知算符「${operator}」且无对其涵义。`);
     }
     private resolveIdentifier(node: IdentifierNode): unknown {
@@ -456,33 +444,24 @@ export class VM {
     }
 
     private executeIfStatement(node: IfStatementNode): unknown {
-        // 执行条件表达式
         const conditionValue = this.executeNode(node.condition);
-        
-        // 判断条件是否为真值（非0、非空字符串等）
         const isTruthy = Boolean(conditionValue);
-        
         if (isTruthy) {
-            // 执行if代码块
             let result: unknown;
             for (const statement of node.body) {
                 result = this.executeNode(statement);
-                // 如果遇到返回语句，立即返回
                 if (statement.type === NodeType.RETURN_STATEMENT) {
                     return result;
                 }
             }
             return result;
         } else {
-            // 检查else if条件
             for (const elseIf of node.elseIfs || []) {
                 const elseIfConditionValue = this.executeNode(elseIf.condition);
                 if (elseIfConditionValue) {
-                    // 执行else if代码块
                     let result: unknown;
                     for (const statement of elseIf.body) {
                         result = this.executeNode(statement);
-                        // 如果遇到返回语句，立即返回
                         if (statement.type === NodeType.RETURN_STATEMENT) {
                             return result;
                         }
@@ -490,13 +469,10 @@ export class VM {
                     return result;
                 }
             }
-            
-            // 执行else代码块
             if (node.elseBody && node.elseBody.length > 0) {
                 let result: unknown;
                 for (const statement of node.elseBody) {
                     result = this.executeNode(statement);
-                    // 如果遇到返回语句，立即返回
                     if (statement.type === NodeType.RETURN_STATEMENT) {
                         return result;
                     }
@@ -504,18 +480,12 @@ export class VM {
                 return result;
             }
         }
-        
         return undefined;
     }
-
     private executeRepeatStatement(node: RepeatStatementNode): unknown {
         let result: unknown;
-        
-        // 执行次数表达式，获取循环次数
         const timesValue = this.executeNode(node.times);
         const repeatCount = Number(timesValue);
-        
-        // 直接在当前环境设置计数器变量
         for (let i = 0; i < repeatCount; i++) {
             if (node.counterName) {
                 this.environment.variables[node.counterName] = {
@@ -523,36 +493,26 @@ export class VM {
                     value: i
                 };
             }
-            
-            // 执行循环体中的每个语句
             for (const statement of node.body) {
                 result = this.executeNode(statement);
             }
         }
-        
         return result;
     }
-    
     private executeWhileStatement(node: WhileStatementNode): unknown {
         let result: unknown;
-        
-        // 循环执行，直到条件为假
         while (true) {
             const conditionValue = this.executeNode(node.condition);
             if (!conditionValue) {
                 break;
             }
-            
-            // 执行循环体
             for (const statement of node.body) {
                 result = this.executeNode(statement);
-                // 如果遇到返回语句，立即返回
                 if (statement.type === NodeType.RETURN_STATEMENT) {
                     return result;
                 }
             }
         }
-        
         return result;
     }
 }
