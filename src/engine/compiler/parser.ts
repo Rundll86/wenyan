@@ -534,6 +534,7 @@ export class Parser {
         // 检查是否有"以"关键字
         let counterName: string | undefined;
         const firstToken = this.peek();
+        let repeatToken;
 
         if (firstToken?.type === TokenType.WITH) {
             // 消费"以"关键字
@@ -543,7 +544,7 @@ export class Parser {
             counterName = counterToken.value;
         }
         // 消费"复行"关键字
-        this.expect(TokenType.REPEAT, "复行");
+        repeatToken = this.expect(TokenType.REPEAT, "复行");
 
         // 解析次数表达式
         const times = this.parseExpression();
@@ -553,16 +554,18 @@ export class Parser {
         if (this.peek()?.type === TokenType.COLON) {
             this.consume();
         }
-
-        // 记录当前缩进级别，用于解析代码块
-        const currentToken = this.peek() || this.tokens[this.position - 1];
-        const repeatIndentation = currentToken?.column || 0;
+        const repeatIndentation = firstToken?.column || repeatToken.column;
         const body: Node[] = [];
 
         // 解析循环体代码块
         while (this.position < this.length) {
             const nextToken = this.peek();
-            if (!nextToken || nextToken.column <= repeatIndentation) {
+            if (!nextToken) {
+                break;
+            }
+            // 如果下一个token的缩进级别大于复行语句的缩进级别，则认为是循环体的一部分
+            const nextTokenIndent = nextToken.column;
+            if (nextTokenIndent <= repeatIndentation) {
                 break;
             }
             const node = this.parseStatement();
@@ -576,8 +579,8 @@ export class Parser {
             counterName,
             times,
             body,
-            line: currentToken?.line || 1,
-            column: currentToken?.column || 1
+            line: repeatToken.line,
+            column: repeatToken.column
         } as RepeatStatementNode;
     }
 
