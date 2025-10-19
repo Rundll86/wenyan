@@ -1,0 +1,54 @@
+{
+    "type": "PROGRAM",
+    "body": [
+        {
+            "type": "IMPORT_DECLARATION",
+            "moduleName": "志者",
+            "symbols": [
+                "曰"
+            ],
+            "line": 1,
+            "column": 2
+        },
+        {
+            "type": "VARIABLE_DECLARATION",
+            "typeName": "阴阳",
+            "name": "甲",
+            "value": {
+                "type": "NUMBER_LITERAL",
+                "value": 0,
+                "line": 3,
+                "column": 10
+            },
+            "line": 3,
+            "column": 1
+        },
+        {
+            "type": "VARIABLE_DECLARATION",
+            "typeName": "阴阳",
+            "name": "乙",
+            "value": {
+                "type": "IDENTIFIER",
+                "name": "甲",
+                "line": 4,
+                "column": 10
+            },
+            "line": 4,
+            "column": 1
+        },
+        {
+            "type": "IDENTIFIER",
+            "name": "且",
+            "line": 4,
+            "column": 12
+        },
+        {
+            "type": "IDENTIFIER",
+            "name": "甲",
+            "line": 4,
+            "column": 14
+        }
+    ],
+    "line": 1,
+    "column": 1
+}
