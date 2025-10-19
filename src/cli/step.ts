@@ -5,7 +5,6 @@ import { readCode } from "./utils";
 export async function getTokens(filepath?: string) {
     try {
         const code = await readCode(filepath);
-        console.log(code);
         const lexer = new Lexer(code);
         return lexer.tokenize();
     } catch (error) {

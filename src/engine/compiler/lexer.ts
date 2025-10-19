@@ -244,6 +244,7 @@ export class Lexer {
                 });
                 break;
             case "再若":
+            case "再则":
                 this.tokens.push({
                     type: TokenType.ELSE_IF,
                     value,
@@ -270,6 +271,30 @@ export class Lexer {
             case "时":
                 this.tokens.push({
                     type: TokenType.WHILE,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
+            case "复行":
+                this.tokens.push({
+                    type: TokenType.REPEAT,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
+            case "次":
+                this.tokens.push({
+                    type: TokenType.TIMES,
+                    value,
+                    line: this.line,
+                    column: this.column - value.length
+                });
+                break;
+            case "以":
+                this.tokens.push({
+                    type: TokenType.WITH,
                     value,
                     line: this.line,
                     column: this.column - value.length

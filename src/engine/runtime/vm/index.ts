@@ -1,6 +1,6 @@
 import { WenyanError } from "../../common/exceptions";
 import { Environment, ValueDescriptor, FunctionDescriptor, FunctionExecutor, ModuleLibrary } from "../../common/structs";
-import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode, IfStatementNode, WhileStatementNode } from "../../compiler/ast";
+import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionCallNode, FunctionDeclarationNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode, IfStatementNode, WhileStatementNode, RepeatStatementNode } from '../../compiler/ast';
 import { FALSY, TRUTHY } from "../../compiler/defines/characters";
 import { Runtime } from "../index";
 
@@ -49,6 +49,8 @@ export class VM {
                 return this.executeIfStatement(node as IfStatementNode);
             case NodeType.WHILE_STATEMENT:
                 return this.executeWhileStatement(node as WhileStatementNode);
+            case NodeType.REPEAT_STATEMENT:
+                return this.executeRepeatStatement(node as RepeatStatementNode);
             default:
                 throw new WenyanError(`抽象语法树无效，未知节点之型「${node.type}」`);
         }
@@ -136,7 +138,7 @@ export class VM {
             throw new WenyanError(`构件「${moduleName}」加载无果`);
         }
         const allSymbols = this.getModuleAllSymbols(currentModule);
-        symbols.forEach(symbol => {
+        symbols.forEach((symbol: string) => {
             if (!allSymbols.includes(symbol)) {
                 throw new WenyanError(`「${symbol}」未建于构件「${moduleName}」之内`);
             }
@@ -278,7 +280,6 @@ export class VM {
         
         // 处理算术运算符
         const arithmeticMap: Record<string, (a: number, b: number) => number> = {
-            "加": (a, b) => a + b,
             "减": (a, b) => a - b,
             "乘": (a, b) => a * b,
             "除": (a, b) => a / b,
@@ -294,19 +295,31 @@ export class VM {
                 if (typeof a !== "number" || typeof b !== "number") {
                     throw new WenyanError("用胜于运算符时，左右之值非数，不可为比");
                 }
-                return a >= b;
+                return a > b;
             },
             "不及": (a, b) => {
                 if (typeof a !== "number" || typeof b !== "number") {
                     throw new WenyanError("用不及运算符时，左右之值非数，不可为比");
                 }
-                return a <= b;
+                return a < b;
             },
             "并且": (a, b) => Boolean(a) && Boolean(b),
             "且": (a, b) => Boolean(a) && Boolean(b),
             "或者": (a, b) => Boolean(a) || Boolean(b),
             "或": (a, b) => Boolean(a) || Boolean(b)
         };
+        
+        // 特殊处理"加"运算符，支持字符串拼接
+        if (operator === "加") {
+            // 如果有一方是字符串，则进行字符串拼接
+            if (typeof leftValue === "string" || typeof rightValue === "string") {
+                return String(leftValue) + String(rightValue);
+            }
+            // 否则进行数值相加
+            const leftNum = Number(leftValue);
+            const rightNum = Number(rightValue);
+            return leftNum + rightNum;
+        }
         
         if (operator in arithmeticMap) {
             const leftNum = Number(leftValue);
@@ -495,6 +508,31 @@ export class VM {
         return undefined;
     }
 
+    private executeRepeatStatement(node: RepeatStatementNode): unknown {
+        let result: unknown;
+        
+        // 执行次数表达式，获取循环次数
+        const timesValue = this.executeNode(node.times);
+        const repeatCount = Number(timesValue);
+        
+        // 直接在当前环境设置计数器变量
+        for (let i = 0; i < repeatCount; i++) {
+            if (node.counterName) {
+                this.environment.variables[node.counterName] = {
+                    type: "数",
+                    value: i
+                };
+            }
+            
+            // 执行循环体中的每个语句
+            for (const statement of node.body) {
+                result = this.executeNode(statement);
+            }
+        }
+        
+        return result;
+    }
+    
     private executeWhileStatement(node: WhileStatementNode): unknown {
         let result: unknown;
         

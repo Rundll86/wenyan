@@ -1,5 +1,5 @@
 import { WenyanError } from "../common/exceptions";
-import { Token, TokenType, Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ParameterNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode, IfStatementNode, WhileStatementNode } from "./ast";
+import { Token, TokenType, Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionDeclarationNode, FunctionCallNode, ParameterNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode, IfStatementNode, WhileStatementNode, RepeatStatementNode } from "./ast";
 import { FALSY, TRUTHY } from "./defines/characters";
 
 export class Parser {
@@ -42,6 +42,8 @@ export class Parser {
             return this.parseIfStatement();
         } else if (this.peek()?.type === TokenType.WHEN) {
             return this.parseWhileStatement();
+        } else if (this.peek()?.type === TokenType.REPEAT || this.peek()?.type === TokenType.WITH) {
+            return this.parseRepeatStatement();
         } else if (this.peek()?.type === TokenType.IDENTIFIER) {
             const savedPosition = this.position;
             const nextToken = this.lookAhead(1);
@@ -315,9 +317,9 @@ export class Parser {
     private parseComparison(): Node {
         let left = this.parseAdditive();
         let operatorToken: Token | undefined;
-        
-        while ((operatorToken = this.peek()) && 
-               [TokenType.IS, TokenType.IS_NOT, TokenType.GREATER_OR_EQUAL, TokenType.LESS_OR_EQUAL].includes(operatorToken.type)) {
+
+        while ((operatorToken = this.peek()) &&
+            [TokenType.IS, TokenType.IS_NOT, TokenType.GREATER_OR_EQUAL, TokenType.LESS_OR_EQUAL].includes(operatorToken.type)) {
             this.consume();
             const right = this.parseAdditive();
             left = {
@@ -329,7 +331,7 @@ export class Parser {
                 column: left.column
             } as ExpressionNode;
         }
-        
+
         return left;
     }
 
@@ -449,11 +451,15 @@ export class Parser {
     private parseIfStatement(): IfStatementNode {
         const ifToken = this.consume();
         const condition = this.parseExpression();
-        
+        // 检查是否需要消费冒号
+        if (this.peek()?.type === TokenType.COLON) {
+            this.consume();
+        }
+
         // 记录当前缩进级别，用于解析代码块
         const ifIndentation = ifToken.column;
         const body: Node[] = [];
-        
+
         // 解析if的代码块
         while (this.position < this.length) {
             const nextToken = this.peek();
@@ -465,14 +471,18 @@ export class Parser {
                 body.push(node);
             }
         }
-        
+
         const elseIfs = [];
-        
+
         // 解析else if部分
         while (this.peek()?.type === TokenType.ELSE_IF) {
             const elseIfToken = this.consume();
+            // 检查是否需要消费冒号
+            if (this.peek()?.type === TokenType.COLON) {
+                this.consume();
+            }
             const elseIfCondition = this.parseExpression();
-            
+
             const elseIfBody: Node[] = [];
             while (this.position < this.length) {
                 const nextToken = this.peek();
@@ -484,19 +494,19 @@ export class Parser {
                     elseIfBody.push(node);
                 }
             }
-            
+
             elseIfs.push({
                 condition: elseIfCondition,
                 body: elseIfBody
             });
         }
-        
+
         const elseBody: Node[] = [];
-        
+
         // 解析else部分
         if (this.peek()?.type === TokenType.ELSE) {
             const elseToken = this.consume();
-            
+
             while (this.position < this.length) {
                 const nextToken = this.peek();
                 if (!nextToken || nextToken.column <= elseToken.column) {
@@ -508,7 +518,7 @@ export class Parser {
                 }
             }
         }
-        
+
         return {
             type: NodeType.IF_STATEMENT,
             condition,
@@ -520,15 +530,72 @@ export class Parser {
         } as IfStatementNode;
     }
 
+    private parseRepeatStatement(): RepeatStatementNode {
+        // 检查是否有"以"关键字
+        let counterName: string | undefined;
+        const firstToken = this.peek();
+
+        if (firstToken?.type === TokenType.WITH) {
+            // 消费"以"关键字
+            this.consume();
+            // 解析计数器变量名
+            const counterToken = this.expect(TokenType.IDENTIFIER);
+            counterName = counterToken.value;
+        }
+        // 消费"复行"关键字
+        this.expect(TokenType.REPEAT, "复行");
+
+        // 解析次数表达式
+        const times = this.parseExpression();
+        // 要求"次"关键字
+        this.expect(TokenType.TIMES, "次");
+        // 检查是否需要消费冒号
+        if (this.peek()?.type === TokenType.COLON) {
+            this.consume();
+        }
+
+        // 记录当前缩进级别，用于解析代码块
+        const currentToken = this.peek() || this.tokens[this.position - 1];
+        const repeatIndentation = currentToken?.column || 0;
+        const body: Node[] = [];
+
+        // 解析循环体代码块
+        while (this.position < this.length) {
+            const nextToken = this.peek();
+            if (!nextToken || nextToken.column <= repeatIndentation) {
+                break;
+            }
+            const node = this.parseStatement();
+            if (node) {
+                body.push(node);
+            }
+        }
+
+        return {
+            type: NodeType.REPEAT_STATEMENT,
+            counterName,
+            times,
+            body,
+            line: currentToken?.line || 1,
+            column: currentToken?.column || 1
+        } as RepeatStatementNode;
+    }
+
     private parseWhileStatement(): WhileStatementNode {
         const whenToken = this.consume();
-        this.expect(TokenType.WHILE, "时");
+        // 解析条件表达式
         const condition = this.parseExpression();
-        
+        // 要求"时"关键字
+        this.expect(TokenType.WHILE, "时");
+        // 检查是否需要消费冒号
+        if (this.peek()?.type === TokenType.COLON) {
+            this.consume();
+        }
+
         // 记录当前缩进级别，用于解析代码块
         const whileIndentation = whenToken.column;
         const body: Node[] = [];
-        
+
         // 解析while的代码块
         while (this.position < this.length) {
             const nextToken = this.peek();
@@ -540,7 +607,7 @@ export class Parser {
                 body.push(node);
             }
         }
-        
+
         return {
             type: NodeType.WHILE_STATEMENT,
             condition,

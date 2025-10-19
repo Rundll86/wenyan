@@ -17,10 +17,10 @@ program.command("译 [文章之所在]")
         await fs.mkdir(filename, { recursive: true });
         if (options.令牌) {
             await fs.writeFile(options.令牌, JSON.stringify(tokens, null, 4));
-        } else console.log("令牌 =", JSON.stringify(tokens));
+        } else console.log("令牌 =", JSON.stringify(tokens, null, 4));
         if (options.抽象树) {
             await fs.writeFile(options.抽象树, JSON.stringify(ast, null, 4));
-        } else console.log("抽象树 =", JSON.stringify(ast));
+        } else console.log("抽象树 =", JSON.stringify(ast, null, 4));
     });
 program.command("运转 [文章之所在]")
     .description("运转文章，若不指明文章之所在，则从标准输入读之")

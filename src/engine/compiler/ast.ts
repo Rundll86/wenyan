@@ -7,6 +7,7 @@ export enum TokenType {
     KNOWN = "KNOWN",
     AS = "AS",
     FROM = "FROM",
+    WITH = "WITH",
     IDENTIFIER = "IDENTIFIER",
     STRING = "STRING",
     NUMBER = "NUMBER",
@@ -23,6 +24,8 @@ export enum TokenType {
     ELSE = "ELSE",
     WHILE = "WHILE",
     WHEN = "WHEN",
+    REPEAT = "REPEAT",
+    TIMES = "TIMES",
     IS = "IS",
     IS_NOT = "IS_NOT",
     GREATER_OR_EQUAL = "GREATER_OR_EQUAL",
@@ -51,6 +54,7 @@ export enum NodeType {
     VARIABLE_ASSIGNMENT = "VARIABLE_ASSIGNMENT",
     IF_STATEMENT = "IF_STATEMENT",
     WHILE_STATEMENT = "WHILE_STATEMENT",
+    REPEAT_STATEMENT = "REPEAT_STATEMENT",
 }
 export interface Node {
     type: NodeType;
@@ -129,5 +133,12 @@ export interface IfStatementNode extends Node {
 export interface WhileStatementNode extends Node {
     type: NodeType.WHILE_STATEMENT;
     condition: Node;
+    body: Node[];
+}
+
+export interface RepeatStatementNode extends Node {
+    type: NodeType.REPEAT_STATEMENT;
+    counterName: string;
+    times: Node;
     body: Node[];
 }
