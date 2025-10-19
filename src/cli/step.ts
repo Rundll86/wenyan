@@ -1,9 +1,10 @@
 import { Lexer, Parser, ProgramNode, Runtime } from "../engine";
-import fs from "fs/promises";
 import { WenyanError } from "../engine/common/exceptions";
-export async function getTokens(filepath: string) {
+import { readCode } from "./utils";
+
+export async function getTokens(filepath?: string) {
     try {
-        const code = await fs.readFile(filepath, "utf-8");
+        const code = await readCode(filepath);
         const lexer = new Lexer(code);
         return lexer.tokenize();
     } catch (error) {
@@ -13,7 +14,7 @@ export async function getTokens(filepath: string) {
         } else throw error;
     }
 }
-export async function getAST(filepath: string): Promise<ProgramNode> {
+export async function getAST(filepath?: string): Promise<ProgramNode> {
     try {
         const tokens = await getTokens(filepath);
         const parser = new Parser(tokens);
@@ -26,7 +27,7 @@ export async function getAST(filepath: string): Promise<ProgramNode> {
         } else throw error;
     }
 }
-export async function run(filepath: string) {
+export async function run(filepath?: string) {
     try {
         const ast = await getAST(filepath);
         const runtime = new Runtime();
