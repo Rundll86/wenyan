@@ -290,10 +290,22 @@ export class VM {
         const conditionalMap: Record<string, (a: unknown, b: unknown) => boolean> = {
             "是": (a, b) => a === b,
             "不是": (a, b) => a !== b,
-            "胜于": (a, b) => a >= b,
-            "不及": (a, b) => a <= b,
+            "胜于": (a, b) => {
+                if (typeof a !== "number" || typeof b !== "number") {
+                    throw new WenyanError("用胜于运算符时，左右之值非数，不可为比");
+                }
+                return a >= b;
+            },
+            "不及": (a, b) => {
+                if (typeof a !== "number" || typeof b !== "number") {
+                    throw new WenyanError("用不及运算符时，左右之值非数，不可为比");
+                }
+                return a <= b;
+            },
             "并且": (a, b) => Boolean(a) && Boolean(b),
-            "或者": (a, b) => Boolean(a) || Boolean(b)
+            "且": (a, b) => Boolean(a) && Boolean(b),
+            "或者": (a, b) => Boolean(a) || Boolean(b),
+            "或": (a, b) => Boolean(a) || Boolean(b)
         };
         
         if (operator in arithmeticMap) {

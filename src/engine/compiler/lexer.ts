@@ -84,16 +84,20 @@ export class Lexer {
                 this.column++;
                 continue;
             }
-            if (this.code.substring(this.position, this.position + 2) === "并且") {
-                this.addToken(TokenType.AND, "并且");
-                this.position++;
-                this.column++;
+            if (char === "且" || this.code.substring(this.position, this.position + 2) === "并且") {
+                this.addToken(TokenType.AND, char === "且" ? "且" : "并且");
+                if (char !== "且") {
+                    this.position++;
+                    this.column++;
+                }
                 continue;
             }
-            if (this.code.substring(this.position, this.position + 2) === "或者") {
-                this.addToken(TokenType.OR, "或者");
-                this.position++;
-                this.column++;
+            if (char === "或" || this.code.substring(this.position, this.position + 2) === "或者") {
+                this.addToken(TokenType.OR, char === "或" ? "或" : "或者");
+                if (char !== "或") {
+                    this.position++;
+                    this.column++;
+                }
                 continue;
             }
             if (this.isLetter(char)) {
