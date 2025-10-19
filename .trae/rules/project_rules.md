@@ -20,6 +20,8 @@ Unexcepted token ${token.value} at line ${token.line} column ${token.column}
 
 ## 运行和编译
 
+在**已修改项目**后你必须**编译**并**lint**一次！！！
+
 - 使用`yarn build`执行编译。
 - 使用`yarn lint --fix`来检查eslint并自动修复。
 - 使用`./文言`来运行项目cli。
