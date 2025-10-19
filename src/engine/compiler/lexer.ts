@@ -227,7 +227,7 @@ export class Lexer {
                     column: this.column - value.length
                 });
                 break;
-            case "设":
+            case "令":
                 this.tokens.push({
                     type: TokenType.LET,
                     value,
