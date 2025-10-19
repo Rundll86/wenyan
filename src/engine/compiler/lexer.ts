@@ -268,7 +268,7 @@ export class Lexer {
                     column: this.column - value.length
                 });
                 break;
-            case "时":
+            case "时复行":
                 this.tokens.push({
                     type: TokenType.WHILE,
                     value,
