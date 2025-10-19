@@ -14,7 +14,6 @@ program.command("译 [文章之所在]")
         const filename = 文章之所在 ? path.basename(文章之所在, path.extname(文章之所在)) : "stdin";
         const tokens = await getTokens(文章之所在);
         const ast = await getAST(文章之所在);
-        await fs.mkdir(filename, { recursive: true });
         if (options.令牌) {
             await fs.writeFile(options.令牌, JSON.stringify(tokens, null, 4));
         } else console.log("令牌 =", JSON.stringify(tokens, null, 4));
