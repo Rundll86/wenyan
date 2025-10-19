@@ -275,7 +275,9 @@ export class VM {
         const { left, operator, right } = node;
         const leftValue = this.executeNode(left);
         const rightValue = this.executeNode(right);
-        const operatorMap: Record<string, (a: number, b: number) => number> = {
+        
+        // 处理算术运算符
+        const arithmeticMap: Record<string, (a: number, b: number) => number> = {
             "加": (a, b) => a + b,
             "减": (a, b) => a - b,
             "乘": (a, b) => a * b,
@@ -283,15 +285,32 @@ export class VM {
             "幂": Math.pow,
             "模": (a, b) => a % b
         };
-        if (operator in operatorMap) {
+        
+        // 处理条件运算符
+        const conditionalMap: Record<string, (a: any, b: any) => boolean> = {
+            "是": (a, b) => a === b,
+            "不是": (a, b) => a !== b,
+            "胜于": (a, b) => a >= b,
+            "不及": (a, b) => a <= b,
+            "并且": (a, b) => Boolean(a) && Boolean(b),
+            "或者": (a, b) => Boolean(a) || Boolean(b)
+        };
+        
+        if (operator in arithmeticMap) {
             const leftNum = Number(leftValue);
             const rightNum = Number(rightValue);
-            return operatorMap[operator](leftNum, rightNum);
+            return arithmeticMap[operator](leftNum, rightNum);
         }
+        
+        if (operator in conditionalMap) {
+            return conditionalMap[operator](leftValue, rightValue);
+        }
+        
         const operatorFuncDescriptor = this.environment.functions[operator];
         if (operatorFuncDescriptor && operatorFuncDescriptor.builtin && operatorFuncDescriptor.builtin.executor) {
             return operatorFuncDescriptor.builtin.executor({ "左": leftValue, "右": rightValue }, this);
         }
+        
         throw new WenyanError(`未知算符「${operator}」且无对其涵义。`);
     }
     private resolveIdentifier(node: IdentifierNode): unknown {

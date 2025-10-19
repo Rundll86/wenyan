@@ -23,6 +23,12 @@ export enum TokenType {
     ELSE = "ELSE",
     WHILE = "WHILE",
     WHEN = "WHEN",
+    IS = "IS",
+    IS_NOT = "IS_NOT",
+    GREATER_OR_EQUAL = "GREATER_OR_EQUAL",
+    LESS_OR_EQUAL = "LESS_OR_EQUAL",
+    AND = "AND",
+    OR = "OR",
 }
 export interface Token {
     type: TokenType;

@@ -275,7 +275,62 @@ export class Parser {
         };
     }
     private parseExpression(): Node {
-        return this.parseAdditive();
+        return this.parseLogicalOr();
+    }
+
+    private parseLogicalOr(): Node {
+        let left = this.parseLogicalAnd();
+        while (this.peek()?.type === TokenType.OR) {
+            const operatorToken = this.consume();
+            const right = this.parseLogicalAnd();
+            left = {
+                type: NodeType.EXPRESSION,
+                left,
+                operator: operatorToken.value,
+                right,
+                line: left.line,
+                column: left.column
+            } as ExpressionNode;
+        }
+        return left;
+    }
+
+    private parseLogicalAnd(): Node {
+        let left = this.parseComparison();
+        while (this.peek()?.type === TokenType.AND) {
+            const operatorToken = this.consume();
+            const right = this.parseComparison();
+            left = {
+                type: NodeType.EXPRESSION,
+                left,
+                operator: operatorToken.value,
+                right,
+                line: left.line,
+                column: left.column
+            } as ExpressionNode;
+        }
+        return left;
+    }
+
+    private parseComparison(): Node {
+        let left = this.parseAdditive();
+        let operatorToken: Token | undefined;
+        
+        while ((operatorToken = this.peek()) && 
+               [TokenType.IS, TokenType.IS_NOT, TokenType.GREATER_OR_EQUAL, TokenType.LESS_OR_EQUAL].includes(operatorToken.type)) {
+            this.consume();
+            const right = this.parseAdditive();
+            left = {
+                type: NodeType.EXPRESSION,
+                left,
+                operator: operatorToken.value,
+                right,
+                line: left.line,
+                column: left.column
+            } as ExpressionNode;
+        }
+        
+        return left;
     }
 
     private parseAdditive(): Node {

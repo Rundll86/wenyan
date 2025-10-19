@@ -62,6 +62,40 @@ export class Lexer {
                 this.addToken(TokenType.COMMA, char);
                 continue;
             }
+            if (char === "是") {
+                this.addToken(TokenType.IS, char);
+                continue;
+            }
+            if (this.code.substring(this.position, this.position + 2) === "不是") {
+                this.addToken(TokenType.IS_NOT, "不是");
+                this.position++;
+                this.column++;
+                continue;
+            }
+            if (this.code.substring(this.position, this.position + 2) === "胜于") {
+                this.addToken(TokenType.GREATER_OR_EQUAL, "胜于");
+                this.position++;
+                this.column++;
+                continue;
+            }
+            if (this.code.substring(this.position, this.position + 2) === "不及") {
+                this.addToken(TokenType.LESS_OR_EQUAL, "不及");
+                this.position++;
+                this.column++;
+                continue;
+            }
+            if (this.code.substring(this.position, this.position + 2) === "并且") {
+                this.addToken(TokenType.AND, "并且");
+                this.position++;
+                this.column++;
+                continue;
+            }
+            if (this.code.substring(this.position, this.position + 2) === "或者") {
+                this.addToken(TokenType.OR, "或者");
+                this.position++;
+                this.column++;
+                continue;
+            }
             if (this.isLetter(char)) {
                 this.tokenizeIdentifier();
                 continue;
