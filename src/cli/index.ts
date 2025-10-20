@@ -16,10 +16,15 @@ program.helpOption("-助, --助也", "陈以辅佐之法");
 program.command("译 [文章之所在]")
     .option("-树, --抽象树 <文书之所在>", "抽象树阵 文书之所在")
     .option("-牌, --令牌 <文书之所在>", "令牌阵 文书之所在")
+    .option("-时, --测时", "测时", false)
     .description("译古文为法理之树。无文则从令入")
-    .action(async (file, options: Record<"抽象树" | "令牌", string>) => {
+    .action(async (file, options) => {
+        let startTime = Date.now();
         const tokens = await getTokens(file);
+        if (options.测时) console.log(`解析令牌耗时：${Date.now() - startTime}ms`);
+        startTime = Date.now();
         const ast = await getAST(file);
+        if (options.测时) console.log(`解析抽象语法树耗时：${Date.now() - startTime}ms`);
         if (options.令牌) {
             await fs.writeFile(options.令牌, JSON.stringify(tokens, null, 4));
         } else console.log("令牌 =", JSON.stringify(tokens, null, 4));
