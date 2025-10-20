@@ -77,13 +77,14 @@ export class Runtime {
         this.moduleRegistry[name] = module;
     }
     private registerBuiltinModules(): void {
-        this.loadBuiltinModule("志者");
+        for (const moduleName in builtins) {
+            this.loadBuiltinModule(moduleName);
+        }
     }
     private loadBuiltinModule(moduleName: string): void {
         const module = builtins[moduleName].default;
         if (module) {
-            const actualModule = module;
-            this.registerModule(moduleName, actualModule);
+            this.registerModule(moduleName, module);
         }
     }
     public getVM(): VM {
