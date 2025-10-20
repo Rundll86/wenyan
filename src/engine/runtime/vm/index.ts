@@ -1,6 +1,6 @@
 import { WenyanError } from "../../common/exceptions";
 import { Environment, ValueDescriptor, FunctionDescriptor, FunctionExecutor, ModuleLibrary } from "../../common/structs";
-import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionCallNode, FunctionDeclarationNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode, IfStatementNode, WhileStatementNode, RepeatStatementNode } from '../../compiler/ast';
+import { Node, NodeType, ProgramNode, ImportDeclarationNode, FunctionCallNode, FunctionDeclarationNode, ReturnStatementNode, ExpressionNode, IdentifierNode, StringLiteralNode, NumberLiteralNode, VariableDeclarationNode, VariableAssignmentNode, IfStatementNode, WhileStatementNode, RepeatStatementNode } from "../../compiler/ast";
 import { FALSY, TRUTHY } from "../../compiler/defines/characters";
 import { Runtime } from "../index";
 

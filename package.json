@@ -15,7 +15,7 @@
         "test": "tsc && node dist/test",
         "dev": "tsc --watch",
         "build": "tsc",
-        "lint": "eslint .",
+        "lint": "eslint . --fix",
         "lint:build": "yarn build && yarn lint"
     },
     "dependencies": {
