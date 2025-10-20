@@ -23,7 +23,7 @@
         "token",
         "lexer",
         "run",
-        "compile",
+        "compile"
     ],
     "repository": {
         "type": "git",
@@ -38,7 +38,7 @@
     },
     "files": [
         "dist",
-        "README.md",
+        "README.md"
     ],
     "license": "MIT",
     "devDependencies": {
@@ -52,7 +52,7 @@
     "scripts": {
         "dev": "tsc --watch",
         "build": "tsc",
-        "lint": "eslint . --fix",
+        "lint": "eslint . --fix"
     },
     "dependencies": {
         "commander": "^14.0.1"
