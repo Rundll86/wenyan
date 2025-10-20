@@ -1,7 +1,45 @@
 {
     "name": "wenyan",
     "version": "1.0.0",
-    "main": "index.js",
+    "main": "dist/src",
+    "author": {
+        "name": "陨落基围虾",
+        "email": "3161880837@qq.com",
+        "url": "https://von-lycaon.我爱你"
+    },
+    "description": "析古国文言抽象之树，运转今夕阵列之卷。",
+    "keywords": [
+        "typescript",
+        "javascript",
+        "china",
+        "文言",
+        "文言文",
+        "parser",
+        "compiler",
+        "runtime",
+        "vm",
+        "interpreter",
+        "ast",
+        "token",
+        "lexer",
+        "run",
+        "compile",
+    ],
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Rundll86/wenyan.git"
+    },
+    "bugs": {
+        "url": "https://github.com/Rundll86/wenyan/issues"
+    },
+    "homepage": "https://github.com/Rundll86/wenyan",
+    "publishConfig": {
+        "access": "public"
+    },
+    "files": [
+        "dist",
+        "README.md",
+    ],
     "license": "MIT",
     "devDependencies": {
         "@eslint/js": "^9.37.0",
@@ -12,11 +50,9 @@
         "typescript-eslint": "^8.46.1"
     },
     "scripts": {
-        "test": "tsc && node dist/test",
         "dev": "tsc --watch",
         "build": "tsc",
         "lint": "eslint . --fix",
-        "lint:build": "yarn build && yarn lint"
     },
     "dependencies": {
         "commander": "^14.0.1"
