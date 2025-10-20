@@ -7,16 +7,16 @@ export default {
                 parameters: [
                     {
                         type: "数",
-                        name: "最小"
+                        name: "始"
                     },
                     {
                         type: "数",
-                        name: "最大"
+                        name: "终"
                     }
                 ],
                 executor(args) {
-                    const min = Number(args.最小);
-                    const max = Number(args.最大);
+                    const min = Number(args.始);
+                    const max = Number(args.终);
                     return Math.floor(Math.random() * (max - min + 1)) + min;
                 }
             }

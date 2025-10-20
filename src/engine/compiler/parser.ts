@@ -515,12 +515,12 @@ export class Parser {
     private parseRepeatStatement(): RepeatStatementNode {
         let counterName: string | undefined;
         const firstToken = this.peek();
-        const repeatToken = this.expect(TokenType.REPEAT, "复行");
         if (firstToken?.type === TokenType.WITH) {
             this.consume();
             const counterToken = this.expect(TokenType.IDENTIFIER);
             counterName = counterToken.value;
         }
+        const repeatToken = this.expect(TokenType.REPEAT, "复行");
         const times = this.parseExpression();
         this.expect(TokenType.TIMES, "次");
         if (this.peek()?.type === TokenType.COLON) {
