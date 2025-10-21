@@ -457,7 +457,7 @@ export class Parser {
         const body: Node[] = [];
         while (this.position < this.length) {
             const nextToken = this.peek();
-            if (!nextToken || nextToken.column <= ifIndentation) {
+            if (!nextToken || nextToken.column <= ifIndentation || nextToken.type === TokenType.ELSE_IF || nextToken.type === TokenType.ELSE) {
                 break;
             }
             const node = this.parseStatement();
@@ -468,14 +468,14 @@ export class Parser {
         const elseIfs = [];
         while (this.peek()?.type === TokenType.ELSE_IF) {
             const elseIfToken = this.consume();
+            const elseIfCondition = this.parseExpression();
             if (this.peek()?.type === TokenType.COLON) {
                 this.consume();
             }
-            const elseIfCondition = this.parseExpression();
             const elseIfBody: Node[] = [];
             while (this.position < this.length) {
                 const nextToken = this.peek();
-                if (!nextToken || nextToken.column <= elseIfToken.column) {
+                if (!nextToken || nextToken.column <= elseIfToken.column || nextToken.type === TokenType.ELSE_IF || nextToken.type === TokenType.ELSE) {
                     break;
                 }
                 const node = this.parseStatement();

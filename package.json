@@ -55,6 +55,8 @@
         "lint": "eslint . --fix"
     },
     "dependencies": {
-        "commander": "^14.0.1"
+        "@types/readline-sync": "^1.4.8",
+        "commander": "^14.0.1",
+        "readline-sync": "^1.4.10"
     }
 }
