@@ -1,42 +1,44 @@
-import { Lexer, Parser, ProgramNode, Runtime } from "../engine";
+import { Lexer, Parser, ProgramNode, Runtime, Token } from "../engine";
 import { WenyanError } from "../engine/common/exceptions";
-import { readCode } from "./utils";
 
-export async function getTokens(filepath?: string) {
+export function getTokens(code: string, errorQuit: boolean = true): Token[] {
     try {
-        const code = await readCode(filepath);
         const lexer = new Lexer(code);
         return lexer.tokenize();
     } catch (error) {
         if (error instanceof WenyanError) {
             console.error(`译毕，有误：${error.message}。`);
-            process.exit(1);
+            if (errorQuit) process.exit(1);
+            else return [];
         } else throw error;
     }
 }
-export async function getAST(filepath?: string): Promise<ProgramNode> {
+export function getAST(code: string, errorQuit: boolean = true): ProgramNode | null {
     try {
-        const tokens = await getTokens(filepath);
+        const tokens = getTokens(code, errorQuit);
         const parser = new Parser(tokens);
         return parser.parse();
     }
     catch (error) {
         if (error instanceof WenyanError) {
             console.error(`译毕，有误：${error.message}。`);
-            process.exit(1);
+            if (errorQuit) process.exit(1);
+            else return null;
         } else throw error;
     }
 }
-export async function run(filepath?: string) {
+export function run(code: string, runtime?: Runtime, errorQuit: boolean = true) {
     try {
-        const ast = await getAST(filepath);
-        const runtime = new Runtime();
+        const ast = getAST(code, errorQuit);
+        if (ast === null) return null;
+        runtime = runtime || new Runtime();
         runtime.execute(ast);
     }
     catch (error) {
         if (error instanceof WenyanError) {
             console.error(`行毕，有误：${error.message}。`);
-            process.exit(1);
+            if (errorQuit) process.exit(1);
+            else return null;
         } else throw error;
     }
 }
