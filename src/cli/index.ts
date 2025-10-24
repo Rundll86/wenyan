@@ -1,11 +1,6 @@
 import { program } from "commander";
-import fs from "fs/promises";
-import { getAST, getTokens, run } from "./step";
+import { PROJECT_NAME, DESCRIPTIONS } from "../engine/common/constans";
 import pack from "../../package.json";
-import { DESCRIPTIONS, PROJECT_NAME } from "../engine/common/constans";
-import { Runtime } from "../engine";
-import readline from "readline/promises";
-import { readCode } from "./utils";
 
 program.name(PROJECT_NAME)
     .nameFromFilename(PROJECT_NAME)
@@ -16,48 +11,4 @@ program.name(PROJECT_NAME)
 program.helpCommand("助 <指示>", "对指示陈其辅佐之法");
 program.helpOption("-助, --助也", "陈以辅佐之法");
 
-program.command("译 [文章之所在]")
-    .option("-树, --抽象树 <文书之所在>", "抽象树阵 文书之所在")
-    .option("-牌, --令牌 <文书之所在>", "令牌阵 文书之所在")
-    .option("-时, --测时", "测时", false)
-    .description("译古文为法理之树。无文则从令入")
-    .action(async (file, options) => {
-        let startTime = Date.now();
-        const code = await readCode(file);
-        const tokens = getTokens(code);
-        if (options.测时) console.log(`令牌：${Date.now() - startTime}ms`);
-        startTime = Date.now();
-        const ast = getAST(code);
-        if (options.测时) console.log(`抽象树：${Date.now() - startTime}ms`);
-        if (options.令牌) {
-            await fs.writeFile(options.令牌, JSON.stringify(tokens, null, 4));
-        };
-        if (options.抽象树) {
-            await fs.writeFile(options.抽象树, JSON.stringify(ast, null, 4));
-        };
-    });
-program.command("运转 [文章之所在]")
-    .description("运转古文，以观其效。无文则从令入")
-    .action(async (file) => run(await readCode(file)) ?? undefined);
-program.command("格物")
-    .action(async () => {
-        const rl = readline.createInterface({
-            input: process.stdin,
-            output: process.stdout,
-        });
-        const runtime = new Runtime();
-        while (true) {
-            let input: string = "";
-            try {
-                input = await rl.question(" · ");
-            } catch {
-                console.log("\n致知。");
-                process.exit(0);
-            };
-            if (input.trim() === "归去") {
-                console.log("再会。");
-                process.exit(0);
-            } else run(input, runtime, false);
-        }
-    });
-program.parse();
+export { program };

@@ -23,7 +23,8 @@
         "token",
         "lexer",
         "run",
-        "compile"
+        "compile",
+        "ancient"
     ],
     "repository": {
         "type": "git",
@@ -40,6 +41,11 @@
         "dist",
         "README.md"
     ],
+    "bin": {
+        "门下": "dist/src/cli/compiler",
+        "尚书": "dist/src/cli/runtime",
+        "格物": "dist/src/cli/repl"
+    },
     "license": "MIT",
     "devDependencies": {
         "@eslint/js": "^9.37.0",
