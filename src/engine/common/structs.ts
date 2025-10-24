@@ -1,6 +1,17 @@
 import { FunctionDeclarationNode } from "../compiler/ast";
 import { type VM } from "../runtime/vm";
-export type ModuleLibrary = Partial<Environment>;
+export interface ReexportItem {
+    moduleName: string;
+    originalName?: string;
+}
+
+export type ReexportsMap = {
+    [symbolName: string]: ReexportItem;
+} | string[];
+
+export type ModuleLibrary = Partial<Environment> & {
+    reexports?: ReexportsMap;
+};
 export interface ClassType {
     asRawValue?: {
         validate: (value: ValueDescriptor) => boolean;

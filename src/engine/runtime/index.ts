@@ -71,6 +71,15 @@ export class Runtime {
         return this.vm.execute(program);
     }
     public loadModule(moduleName: string): ModuleLibrary | null {
+        if (this.moduleRegistry[moduleName]) {
+            return this.moduleRegistry[moduleName];
+        }
+        if (moduleName in builtins) {
+            const module = builtins[moduleName].default;
+            if (module) {
+                this.registerModule(moduleName, module);
+            }
+        }
         return this.moduleRegistry[moduleName] || null;
     }
     public registerModule(name: string, module: ModuleLibrary): void {
@@ -84,7 +93,17 @@ export class Runtime {
     private loadBuiltinModule(moduleName: string): void {
         const module = builtins[moduleName].default;
         if (module) {
-            this.registerModule(moduleName, module);
+            const moduleContent: ModuleLibrary = {};
+            if (module.functions) {
+                moduleContent.functions = module.functions;
+            }
+            if (module.variables) {
+                moduleContent.variables = module.variables;
+            }
+            if (module.reexports) {
+                moduleContent.reexports = module.reexports;
+            }
+            this.registerModule(moduleName, moduleContent);
         }
     }
     public getVM(): VM {

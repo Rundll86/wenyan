@@ -144,21 +144,61 @@ export class VM {
             }
         });
         const importedSymbols: Record<string, unknown> = {};
-        if (currentModule.functions) {
-            for (const symbol of symbols) {
-                if (symbol in currentModule.functions) {
-                    const funcDescriptor = currentModule.functions[symbol];
+        for (const symbol of symbols) {
+            if (currentModule.reexports && typeof currentModule.reexports === 'object' && !Array.isArray(currentModule.reexports) && currentModule.reexports[symbol]) {
+                const reexport = currentModule.reexports[symbol];
+                const sourceModule = this.runtime.loadModule(reexport.moduleName);
+                if (!sourceModule) {
+                    throw new WenyanError(`重导出源构件「${reexport.moduleName}」加载无果`);
+                }
+                const originalName = reexport.originalName || symbol;
+                if (sourceModule.functions && sourceModule.functions[originalName]) {
+                    const funcDescriptor = sourceModule.functions[originalName];
                     this.environment.functions[symbol] = funcDescriptor;
                     importedSymbols[symbol] = funcDescriptor;
                 }
-            }
-        }
-        if (currentModule.variables) {
-            for (const symbol of symbols) {
-                if (symbol in currentModule.variables) {
-                    this.environment.variables[symbol] = currentModule.variables[symbol];
-                    importedSymbols[symbol] = currentModule.variables[symbol];
+                else if (sourceModule.variables && sourceModule.variables[originalName]) {
+                    const varDescriptor = sourceModule.variables[originalName];
+                    this.environment.variables[symbol] = varDescriptor;
+                    importedSymbols[symbol] = varDescriptor;
                 }
+                else {
+                    throw new WenyanError(`重导出符号「${originalName}」未见于源构件「${reexport.moduleName}」`);
+                }
+            }
+            else if (currentModule.reexports && Array.isArray(currentModule.reexports)) {
+                let found = false;
+                for (const reexportModuleName of currentModule.reexports) {
+                    const sourceModule = this.runtime.loadModule(reexportModuleName);
+                    if (!sourceModule) {
+                        throw new WenyanError(`重导出源构件「${reexportModuleName}」加载无果`);
+                    }
+                    if (sourceModule.functions && sourceModule.functions[symbol]) {
+                        const funcDescriptor = sourceModule.functions[symbol];
+                        this.environment.functions[symbol] = funcDescriptor;
+                        importedSymbols[symbol] = funcDescriptor;
+                        found = true;
+                        break;
+                    }
+                    else if (sourceModule.variables && sourceModule.variables[symbol]) {
+                        const varDescriptor = sourceModule.variables[symbol];
+                        this.environment.variables[symbol] = varDescriptor;
+                        importedSymbols[symbol] = varDescriptor;
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) continue;
+            }
+            if (currentModule.functions && currentModule.functions[symbol]) {
+                const funcDescriptor = currentModule.functions[symbol];
+                this.environment.functions[symbol] = funcDescriptor;
+                importedSymbols[symbol] = funcDescriptor;
+            }
+            else if (currentModule.variables && currentModule.variables[symbol]) {
+                const varDescriptor = currentModule.variables[symbol];
+                this.environment.variables[symbol] = varDescriptor;
+                importedSymbols[symbol] = varDescriptor;
             }
         }
         return importedSymbols;
@@ -439,6 +479,23 @@ export class VM {
         }
         if (full.modules) {
             result.push(...Object.keys(full.modules));
+        }
+        if (module.reexports) {
+            if (Array.isArray(module.reexports)) {
+                for (const reexportModuleName of module.reexports) {
+                    const sourceModule = this.runtime.loadModule(reexportModuleName);
+                    if (sourceModule) {
+                        if (sourceModule.functions) {
+                            result.push(...Object.keys(sourceModule.functions));
+                        }
+                        if (sourceModule.variables) {
+                            result.push(...Object.keys(sourceModule.variables));
+                        }
+                    }
+                }
+            } else {
+                result.push(...Object.keys(module.reexports));
+            }
         }
         return result;
     }
