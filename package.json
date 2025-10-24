@@ -42,9 +42,9 @@
         "README.md"
     ],
     "bin": {
-        "门下": "dist/src/cli/compiler",
-        "尚书": "dist/src/cli/runtime",
-        "格物": "dist/src/cli/repl"
+        "门下": "./dist/src/cli/compiler.js",
+        "尚书": "./dist/src/cli/runtime.js",
+        "格物": "./dist/src/cli/repl.js"
     },
     "license": "MIT",
     "devDependencies": {
