@@ -275,7 +275,7 @@ export class Lexer {
                     line: this.line,
                     column: this.column - value.length
                 });
-                break;
+                break;//
             case "复行":
                 this.tokens.push({
                     type: TokenType.REPEAT,

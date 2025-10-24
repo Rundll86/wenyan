@@ -461,7 +461,7 @@ export class Parser {
                 break;
             }
             const node = this.parseStatement();
-            if (node) {
+            if (node) {//
                 body.push(node);
             }
         }

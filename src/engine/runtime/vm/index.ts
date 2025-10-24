@@ -493,7 +493,7 @@ export class VM {
                         }
                     }
                 }
-            } else {
+            } else {//
                 result.push(...Object.keys(module.reexports));
             }
         }

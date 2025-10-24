@@ -109,7 +109,7 @@ export class Runtime {
     public getVM(): VM {
         return this.vm;
     }
-    public createContext(env?: Partial<Environment>): VM {
+    public createContext(env?: Partial<Environment>): VM {//
         const newVM = new VM(this, {
             ...this.defaultEnvironment,
             ...env
