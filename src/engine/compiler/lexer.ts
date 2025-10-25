@@ -104,9 +104,11 @@ export class Lexer {
                 this.tokenizeIdentifier();
                 continue;
             }
+            const currentLine = this.line;
+            const currentColumn = this.column;
             this.position++;
             this.column++;
-            throw new WenyanError(`有未识之符「${char}」于第${this.line}行，第${this.column}列`);
+            throw new WenyanError(`有未识之符「${char}」于第${currentLine}行，第${currentColumn}列`, currentLine, currentColumn);
         }
         return this.tokens;
     }
@@ -134,7 +136,7 @@ export class Lexer {
             this.position++;
             this.column++;
         } else {
-            throw new WenyanError(`有未闭字符串于第${this.line}行，第${this.column}列`);
+            throw new WenyanError(`有未闭字符串于第${this.line}行，第${this.column}列`, this.line, this.column);
         }
         this.tokens.push({
             type: TokenType.STRING,

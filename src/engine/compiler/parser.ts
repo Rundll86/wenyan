@@ -425,7 +425,7 @@ export class Parser {
                     column: token.column
                 } as StringLiteralNode;
             default:
-                throw new WenyanError(`于第${token.line}行、${token.column}列，遇非所欲之令牌「${token.value}」`);
+                throw new WenyanError(`于第${token.line}行、${token.column}列，遇非所欲之令牌「${token.value}」`, token.line, token.column);
         }
     }
     private consume(): Token {
@@ -440,10 +440,10 @@ export class Parser {
     private expect(type: TokenType, expectedValue?: string): Token {
         const token = this.peek();
         if (!token || token.type !== type) {
-            throw new WenyanError(`欲得「${expectedValue || TokenType[type]}」，然见${token ? TokenType[token.type] : "文末"}`);
+            throw new WenyanError(`欲得「${expectedValue || TokenType[type]}」，然见${token ? TokenType[token.type] : "文末"}`, token?.line, token?.column);
         }
         if (expectedValue && token.value !== expectedValue) {
-            throw new WenyanError(`欲得「${expectedValue}」，然见${token.value}`);
+            throw new WenyanError(`欲得「${expectedValue}」，然见${token.value}`, token.line, token.column);
         }
         return this.consume();
     }
